@@ -1,4 +1,3 @@
-import asyncio
 import os
 import pathlib
 import pkgutil
@@ -57,6 +56,7 @@ def build_site():
 
 
 def main():
+    build_site()
     # Ignore changes in files or directories that start with "_" or "."
     for changes in watchgod.watch(
         ".", watcher_cls=watchgod.RegExpWatcher, watcher_kwargs={"re_dirs": "^[^_.]*$"}
@@ -65,6 +65,4 @@ def main():
 
 
 if __name__ == "__main__":
-    build_site()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    main()
