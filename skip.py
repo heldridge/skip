@@ -20,14 +20,17 @@ def process_data():
         print(module.get_data())
 
 
-async def main():
+def build_site():
     if USE_DATA_DIR:
-        async for changes in awatch("_data"):
-            process_data()
+        process_data()
+
+
+async def main():
+    async for changes in awatch("."):
+        build_site()
 
 
 if __name__ == "__main__":
-    if USE_DATA_DIR:
-        process_data()
+    build_site()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
