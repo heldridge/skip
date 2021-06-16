@@ -5,6 +5,7 @@ import pkgutil
 from typing import Dict
 
 import frontmatter
+import jinja2
 import markdown
 import watchgod
 
@@ -26,8 +27,12 @@ def process_datafiles() -> Dict:
 
 def build_site():
     print("Building Site")
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
+
     if USE_DATA_DIR:
         data = process_datafiles()
+    else:
+        data = {}
 
     site_dir = pathlib.Path("_site")
     os.makedirs(site_dir, exist_ok=True)
@@ -46,15 +51,20 @@ def build_site():
             filepath = os.path.join(root, filename)
             if filename.endswith(".md"):
                 with open(filepath) as infile:
-                    file = frontmatter.load(infile)
+                    file_frontmatter = frontmatter.load(infile)
 
                 filedir = site_dir / root / filename[:-3]
                 os.makedirs(filedir, exist_ok=True)
                 page_path = filedir / "index.html"
 
+                html = markdown.markdown(file_frontmatter.content)
+                if "layout" in file_frontmatter:
+                    template = jinja_env.get_template(file_frontmatter["layout"])
+                    html = template.render(content=html, data=data)
+
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
-                    outfile.write(markdown.markdown(file.content))
+                    outfile.write(html)
     print("Build Complete!")
 
 
