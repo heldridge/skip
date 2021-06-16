@@ -4,6 +4,7 @@ import pathlib
 import pkgutil
 from typing import Dict
 
+import frontmatter
 import markdown
 import watchgod
 
@@ -41,20 +42,19 @@ def build_site():
         for index in sorted(del_indexes, reverse=True):
             del dirs[index]
 
-        for file in files:
-            filepath = os.path.join(root, file)
-            if file.endswith(".md"):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            if filename.endswith(".md"):
                 with open(filepath) as infile:
-                    md = infile.read()
+                    file = frontmatter.load(infile)
 
-                filename = file[:-3]
-                filedir = site_dir / root / filename
+                filedir = site_dir / root / filename[:-3]
                 os.makedirs(filedir, exist_ok=True)
                 page_path = filedir / "index.html"
 
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
-                    outfile.write(markdown.markdown(md))
+                    outfile.write(markdown.markdown(file.content))
     print("Build Complete!")
 
 

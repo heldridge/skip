@@ -9,6 +9,7 @@ license = "MIT"
 python = "^3.9"
 watchgod = "^0.7"
 Markdown = "^3.3.4"
+python-frontmatter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.6b0"
