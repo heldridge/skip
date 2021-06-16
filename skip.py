@@ -9,6 +9,8 @@ import jinja2
 import markdown
 import watchgod
 
+import server
+
 USE_DATA_DIR = True
 try:
     import data
@@ -73,12 +75,20 @@ def main():
     parser.add_argument(
         "-w", "--watch", help="Watch files and reload on changes", action="store_true"
     )
-
+    parser.add_argument(
+        "-s", "--serve", help="Serve the site on localhost", action="store_true"
+    )
+    parser.add_argument(
+        "-p", "--port", help="The port to serve on", type=int, default=8080
+    )
     args = parser.parse_args()
 
     build_site()
 
-    if args.watch:
+    if args.serve:
+        server.run("_site", args.port)
+
+    if args.watch or args.serve:
         print("\nWatching files for changes...")
         # Ignore changes in files or directories that start with "_" or "."
         for changes in watchgod.watch(
