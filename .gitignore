@@ -1,5 +1,5 @@
 *.pyc
-_data
+data/
 *.md
 _site/
 sandbox/

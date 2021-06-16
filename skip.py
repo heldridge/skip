@@ -5,7 +5,7 @@ import pkgutil
 from typing import Dict
 
 import markdown
-from watchgod import watch
+import watchgod
 
 USE_DATA_DIR = True
 try:
@@ -31,7 +31,7 @@ def build_site():
     site_dir = pathlib.Path("_site")
     os.makedirs(site_dir, exist_ok=True)
 
-    ignore_dirs = {".git", "_data", "_site", "__pycache__"}
+    ignore_dirs = {".git", "data", "_site", "__pycache__"}
     for root, dirs, files in os.walk("."):
         # Prune directories we don't want to visit
         del_indexes = []
@@ -57,7 +57,9 @@ def build_site():
 
 
 def main():
-    for changes in watch("."):
+    for changes in watchgod.watch(
+        ".", watcher_cls=watchgod.RegExpWatcher, watcher_kwargs={"re_dirs": "^[^_.]*$"}
+    ):
         build_site()
 
 
