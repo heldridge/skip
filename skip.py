@@ -5,7 +5,7 @@ import pkgutil
 from typing import Dict
 
 import markdown
-from watchgod import awatch
+from watchgod import watch
 
 USE_DATA_DIR = True
 try:
@@ -31,24 +31,33 @@ def build_site():
     site_dir = pathlib.Path("_site")
     os.makedirs(site_dir, exist_ok=True)
 
-    for file in os.listdir("."):
-        if file.endswith(".md"):
-            print("Processing:", file)
-            with open(file) as infile:
-                md = infile.read()
+    ignore_dirs = {".git", "_data", "_site", "__pycache__"}
+    for root, dirs, files in os.walk("."):
+        # Prune directories we don't want to visit
+        del_indexes = []
+        for index, dirname in enumerate(dirs):
+            if dirname in ignore_dirs:
+                del_indexes.append(index)
+        for index in sorted(del_indexes, reverse=True):
+            del dirs[index]
 
-            filename = file[:-3]
-            os.makedirs(site_dir / filename)
+        for file in files:
+            if file.endswith(".md"):
+                with open(os.path.join(root, file)) as infile:
+                    md = infile.read()
 
-            page_path = site_dir / filename / "index.html"
+                filename = file[:-3]
+                filedir = site_dir / root / filename
+                os.makedirs(filedir, exist_ok=True)
+                page_path = filedir / "index.html"
 
-            print("Writing", page_path, "from", file)
-            with open(page_path, "w+") as outfile:
-                outfile.write(markdown.markdown(md))
+                print("Writing", page_path, "from", file)
+                with open(page_path, "w+") as outfile:
+                    outfile.write(markdown.markdown(md))
 
 
-async def main():
-    async for changes in awatch("."):
+def main():
+    for changes in watch("."):
         build_site()
 
 
