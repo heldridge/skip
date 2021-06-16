@@ -1,5 +1,6 @@
 import asyncio
 import pkgutil
+from typing import Dict
 
 from watchgod import awatch
 
@@ -10,19 +11,19 @@ except ImportError:
     USE_DATA_DIR = False
 
 
-def process_data():
-    data_modules = []
+def process_datafiles() -> Dict:
+    data = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(_data.__path__):
         module = loader.find_module(module_name).load_module(module_name)
-        data_modules.append(module)
+        data[module_name] = module.get_data()
 
-    for module in data_modules:
-        print(module.get_data())
+    return data
 
 
 def build_site():
     if USE_DATA_DIR:
-        process_data()
+        data = process_datafiles()
+        print(data)
 
 
 async def main():
