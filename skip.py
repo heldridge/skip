@@ -1,3 +1,4 @@
+import argparse
 import os
 import pathlib
 import pkgutil
@@ -8,24 +9,24 @@ import watchgod
 
 USE_DATA_DIR = True
 try:
-    import _data
+    import data
 except ImportError:
     USE_DATA_DIR = False
 
 
 def process_datafiles() -> Dict:
-    data = {}
-    for loader, module_name, is_pkg in pkgutil.iter_modules(_data.__path__):
+    data_map = {}
+    for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
         module = loader.find_module(module_name).load_module(module_name)
-        data[module_name] = module.get_data()
+        data_map[module_name] = module.get_data()
 
-    return data
+    return data_map
 
 
 def build_site():
+    print("Building Site")
     if USE_DATA_DIR:
         data = process_datafiles()
-        print(data)
 
     site_dir = pathlib.Path("_site")
     os.makedirs(site_dir, exist_ok=True)
@@ -41,8 +42,9 @@ def build_site():
             del dirs[index]
 
         for file in files:
+            filepath = os.path.join(root, file)
             if file.endswith(".md"):
-                with open(os.path.join(root, file)) as infile:
+                with open(filepath) as infile:
                     md = infile.read()
 
                 filename = file[:-3]
@@ -50,18 +52,32 @@ def build_site():
                 os.makedirs(filedir, exist_ok=True)
                 page_path = filedir / "index.html"
 
-                print("Writing", page_path, "from", file)
+                print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
                     outfile.write(markdown.markdown(md))
+    print("Build Complete!")
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-w", "--watch", help="Watch files and reload on changes", action="store_true"
+    )
+
+    args = parser.parse_args()
+
     build_site()
-    # Ignore changes in files or directories that start with "_" or "."
-    for changes in watchgod.watch(
-        ".", watcher_cls=watchgod.RegExpWatcher, watcher_kwargs={"re_dirs": "^[^_.]*$"}
-    ):
-        build_site()
+
+    if args.watch:
+        print("\nWatching files for changes...")
+        # Ignore changes in files or directories that start with "_" or "."
+        for changes in watchgod.watch(
+            ".",
+            watcher_cls=watchgod.RegExpWatcher,
+            watcher_kwargs={"re_dirs": "^[^_.]*$"},
+        ):
+            build_site()
+            print("")
 
 
 if __name__ == "__main__":
