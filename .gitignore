@@ -1,2 +1,4 @@
 *.pyc
 _data
+*.md
+_site/

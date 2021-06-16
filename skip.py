@@ -1,7 +1,10 @@
 import asyncio
+import os
+import pathlib
 import pkgutil
 from typing import Dict
 
+import markdown
 from watchgod import awatch
 
 USE_DATA_DIR = True
@@ -24,6 +27,24 @@ def build_site():
     if USE_DATA_DIR:
         data = process_datafiles()
         print(data)
+
+    site_dir = pathlib.Path("_site")
+    os.makedirs(site_dir, exist_ok=True)
+
+    for file in os.listdir("."):
+        if file.endswith(".md"):
+            print("Processing:", file)
+            with open(file) as infile:
+                md = infile.read()
+
+            filename = file[:-3]
+            os.makedirs(site_dir / filename)
+
+            page_path = site_dir / filename / "index.html"
+
+            print("Writing", page_path, "from", file)
+            with open(page_path, "w+") as outfile:
+                outfile.write(markdown.markdown(md))
 
 
 async def main():
