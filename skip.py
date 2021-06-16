@@ -57,6 +57,7 @@ def build_site():
 
 
 def main():
+    # Ignore changes in files or directories that start with "_" or "."
     for changes in watchgod.watch(
         ".", watcher_cls=watchgod.RegExpWatcher, watcher_kwargs={"re_dirs": "^[^_.]*$"}
     ):
