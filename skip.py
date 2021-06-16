@@ -3,7 +3,11 @@ import pkgutil
 
 from watchgod import awatch
 
-import _data
+USE_DATA_DIR = True
+try:
+    import _data
+except ImportError:
+    USE_DATA_DIR = False
 
 
 def process_data():
@@ -17,11 +21,13 @@ def process_data():
 
 
 async def main():
-    async for changes in awatch("_data"):
-        process_data()
+    if USE_DATA_DIR:
+        async for changes in awatch("_data"):
+            process_data()
 
 
 if __name__ == "__main__":
-    process_data()
+    if USE_DATA_DIR:
+        process_data()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
