@@ -78,9 +78,7 @@ def main():
     parser.add_argument(
         "-s", "--serve", help="Serve the site on localhost", action="store_true"
     )
-    parser.add_argument(
-        "-p", "--port", help="The port to serve on", type=int, default=8080
-    )
+    parser.add_argument("-p", "--port", help="The port to serve on", type=int)
     args = parser.parse_args()
 
     build_site()

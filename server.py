@@ -10,11 +10,30 @@ class QuietHander(http.server.SimpleHTTPRequestHandler):
         return
 
 
-def run_server(directory, port):
-    Handler = functools.partial(QuietHander, directory=directory)
-    with socketserver.TCPServer(("", port), Handler) as httpd:
+def _start_server_on_port(handler, port):
+    with socketserver.TCPServer(("", port), handler) as httpd:
         print(f"Serving at localhost:{port}")
         httpd.serve_forever()
+
+
+def run_server(directory, port):
+    Handler = functools.partial(QuietHander, directory=directory)
+
+    if port is None:
+        current_port = 8080
+        while current_port <= 65535:
+            try:
+                _start_server_on_port(Handler, current_port)
+            except OSError as e:
+                # errno 48: Address already in use
+                if e.errno == 48:
+                    current_port += 1
+                    continue
+                else:
+                    raise e
+
+    else:
+        _start_server_on_port(Handler, port)
 
 
 def run(directory, port):
