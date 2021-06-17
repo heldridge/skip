@@ -1,6 +1,7 @@
 *.pyc
 data/
 *.md
+!README.md
 _site/
 sandbox/
 templates/
