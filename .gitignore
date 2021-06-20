@@ -5,3 +5,5 @@ data/
 _site/
 sandbox/
 templates/
+css/
+config.py

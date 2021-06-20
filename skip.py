@@ -17,6 +17,11 @@ try:
 except ImportError:
     USE_DATA_DIR = False
 
+try:
+    import config
+except ImportError:
+    print("No config found, using defaults")
+
 
 def process_datafiles() -> Dict:
     data_map = {}
