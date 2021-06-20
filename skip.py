@@ -1,7 +1,9 @@
 import argparse
+import errno
 import os
 import pathlib
 import pkgutil
+import shutil
 from typing import Dict
 
 import frontmatter
@@ -73,6 +75,23 @@ def build_site(config):
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
                     outfile.write(html)
+    for copy_target in config["copy"]:
+        if ":" in copy_target:
+            src, dest = copy_target.split(":")
+        else:
+            src = dest = copy_target
+
+        dest = site_dir / dest
+        print(f"Copying {src} to {dest}")
+
+        try:
+            shutil.copytree(src, dest, dirs_exist_ok=True)
+        except OSError as e:
+            if e.errno == errno.ENOTDIR:
+                shutil.copy(src, dest)
+            else:
+                raise e
+
     print("Build Complete!")
 
 
@@ -90,17 +109,27 @@ def main():
         "--output",
         help="The directory to output the built site to",
     )
+    parser.add_argument(
+        "-c",
+        "--copy",
+        help=(
+            "Files or directories to copy into the root of site folder. Use a colon to "
+            'specify a new path. For example, "x.css:style/x.css" will copy the file '
+            'to "./_site/style/x.css"'
+        ),
+        nargs="+",
+    )
     args = parser.parse_args()
 
     # Default config
-    config = {"output": "_site"}
+    config = {"output": "_site", "copy": []}
 
     if settings:
         config = {**config, **vars(settings).get("OPTIONS")}
 
     # CLI flags take precedence over settings file
     dict_args = vars(args)
-    arg_config_options = ["output", "port"]
+    arg_config_options = ["output", "port", "copy"]
     for option in arg_config_options:
         if dict_args[option] is not None:
             config[option] = dict_args[option]
