@@ -1,3 +1,4 @@
+import errno
 import http.server
 import functools
 import socketserver
@@ -26,7 +27,7 @@ def run_server(config):
                 _start_server_on_port(Handler, current_port)
             except OSError as e:
                 # errno 48: Address already in use
-                if e.errno == 48:
+                if e.errno == errno.EADDRINUSE:
                     current_port += 1
                     continue
                 else:
