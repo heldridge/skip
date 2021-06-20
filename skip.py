@@ -18,9 +18,10 @@ except ImportError:
     USE_DATA_DIR = False
 
 try:
-    import config
+    import settings
 except ImportError:
-    print("No config found, using defaults")
+    print("No settings file found, using defaults")
+    USE_SETTINGS = False
 
 
 def process_datafiles() -> Dict:
@@ -88,11 +89,21 @@ def main():
         "-o",
         "--output",
         help="The directory to output the built site to",
-        default="_site",
     )
     args = parser.parse_args()
 
-    config = {"output": args.output, "port": args.port}
+    # Default config
+    config = {"output": "_site"}
+
+    if settings:
+        config = {**config, **vars(settings).get("OPTIONS")}
+
+    # CLI flags take precedence over settings file
+    dict_args = vars(args)
+    arg_config_options = ["output", "port"]
+    for option in arg_config_options:
+        if dict_args[option] is not None:
+            config[option] = dict_args[option]
 
     build_site(config)
 

@@ -6,5 +6,5 @@ _site/
 sandbox/
 templates/
 css/
-config.py
+settings.py
 .vscode/
