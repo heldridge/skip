@@ -16,10 +16,10 @@ def _start_server_on_port(handler, port):
         httpd.serve_forever()
 
 
-def run_server(directory, port):
-    Handler = functools.partial(QuietHander, directory=directory)
+def run_server(config):
+    Handler = functools.partial(QuietHander, directory=config["output"])
 
-    if port is None:
+    if config["port"] is None:
         current_port = 8080
         while current_port <= 65535:
             try:
@@ -33,11 +33,9 @@ def run_server(directory, port):
                     raise e
 
     else:
-        _start_server_on_port(Handler, port)
+        _start_server_on_port(Handler, config["port"])
 
 
-def run(directory, port):
-    server_thread = threading.Thread(
-        target=run_server, args=(directory, port), daemon=True
-    )
+def run(config):
+    server_thread = threading.Thread(target=run_server, args=(config,), daemon=True)
     server_thread.start()

@@ -7,3 +7,4 @@ sandbox/
 templates/
 css/
 config.py
+.vscode/
