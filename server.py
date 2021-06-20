@@ -20,7 +20,7 @@ def _start_server_on_port(handler, port):
 def run_server(config):
     Handler = functools.partial(QuietHander, directory=config["output"])
 
-    if config["port"] is None:
+    if config.get("port") is None:
         current_port = 8080
         while current_port <= 65535:
             try:
