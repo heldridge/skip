@@ -27,7 +27,7 @@ def process_datafiles() -> Dict:
     return data_map
 
 
-def build_site():
+def build_site(site_dir_name):
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
@@ -36,10 +36,10 @@ def build_site():
     else:
         data = {}
 
-    site_dir = pathlib.Path("_site")
+    site_dir = pathlib.Path(site_dir_name)
     os.makedirs(site_dir, exist_ok=True)
 
-    ignore_dirs = {".git", "data", "_site", "__pycache__"}
+    ignore_dirs = {".git", "data", site_dir_name, "__pycache__"}
     for root, dirs, files in os.walk("."):
         # Prune directories we don't want to visit
         del_indexes = []
@@ -79,12 +79,18 @@ def main():
         "-s", "--serve", help="Serve the site on localhost", action="store_true"
     )
     parser.add_argument("-p", "--port", help="The port to serve on", type=int)
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="The directory to output the built site to",
+        default="_site",
+    )
     args = parser.parse_args()
 
-    build_site()
+    build_site(args.output)
 
     if args.serve:
-        server.run("_site", args.port)
+        server.run(args.output, args.port)
 
     if args.watch or args.serve:
         print("\nWatching files for changes...")
@@ -94,7 +100,7 @@ def main():
             watcher_cls=watchgod.RegExpWatcher,
             watcher_kwargs={"re_dirs": "^[^_.]*$"},
         ):
-            build_site()
+            build_site(args.output)
             print("")
 
 
