@@ -75,6 +75,7 @@ def build_site(config):
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
                     outfile.write(html)
+
     for copy_target in config["copy"]:
         if ":" in copy_target:
             src, dest = copy_target.split(":")
