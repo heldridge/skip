@@ -10,6 +10,8 @@ import markdown
 import watchgod
 
 import server
+import watchers
+
 
 USE_DATA_DIR = True
 try:
@@ -100,11 +102,7 @@ def main():
     if args.watch or args.serve:
         print("\nWatching files for changes...")
         # Ignore changes in files or directories that start with "_" or "."
-        for changes in watchgod.watch(
-            ".",
-            watcher_cls=watchgod.RegExpWatcher,
-            watcher_kwargs={"re_dirs": "^[^_.]*$"},
-        ):
+        for changes in watchgod.watch(".", watcher_cls=watchers.SkipDefaultWatcher):
             build_site(args.output)
             print("")
 
