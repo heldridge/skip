@@ -74,7 +74,7 @@ def build_site(site_dir_name):
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
                     outfile.write(html)
-    print("Build Complete!")
+    print("Build Complete!\n")
 
 
 def main():
@@ -101,10 +101,21 @@ def main():
 
     if args.watch or args.serve:
         print("\nWatching files for changes...")
-        # Ignore changes in files or directories that start with "_" or "."
-        for changes in watchgod.watch(".", watcher_cls=watchers.SkipDefaultWatcher):
-            build_site(args.output)
-            print("")
+
+        skipignore_path = pathlib.Path(".skipignore")
+
+        if skipignore_path.exists():
+            print("Using .skipignore...")
+            for changes in watchgod.watch(
+                ".",
+                watcher_cls=watchers.SkipIgnoreWatcher,
+                watcher_kwargs={"ignore_file_path": skipignore_path},
+            ):
+                build_site(args.output)
+        else:
+            print("No .skipignore found, using defaults...")
+            for changes in watchgod.watch(".", watcher_cls=watchers.SkipDefaultWatcher):
+                build_site(args.output)
 
 
 if __name__ == "__main__":
