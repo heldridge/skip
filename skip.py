@@ -47,7 +47,7 @@ def build_site(site_dir_name, should_ignore):
     site_dir = pathlib.Path(site_dir_name)
     os.makedirs(site_dir, exist_ok=True)
 
-    ignore_dirs = {".git", "data", site_dir_name, "__pycache__"}
+    ignore_dirs = {".git", "data", site_dir_name, "templates", "__pycache__"}
     for root, dirs, files in os.walk("."):
         # Prune directories we don't want to visit
         del_indexes = []
