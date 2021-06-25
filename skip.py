@@ -70,7 +70,7 @@ def build_site(site_dir_name, should_ignore):
                 html = markdown.markdown(file_frontmatter.content)
                 if "layout" in file_frontmatter:
                     template = jinja_env.get_template(file_frontmatter["layout"])
-                    html = template.render(content=html, data=data)
+                    html = template.render(content=html, data=data, **file_frontmatter)
 
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
