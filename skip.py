@@ -59,7 +59,10 @@ def build_site(site_dir_name, should_ignore):
 
         for filename in files:
             filepath = os.path.join(root, filename)
-            if filename.endswith(".md"):
+
+            suffix = pathlib.Path(filename).suffix
+
+            if suffix in {".md", ".j2", ".html"}:
                 with open(filepath) as infile:
                     file_frontmatter = frontmatter.load(infile)
 
@@ -67,14 +70,23 @@ def build_site(site_dir_name, should_ignore):
                 os.makedirs(filedir, exist_ok=True)
                 page_path = filedir / "index.html"
 
-                html = markdown.markdown(file_frontmatter.content)
-                if "layout" in file_frontmatter:
-                    template = jinja_env.get_template(file_frontmatter["layout"])
-                    html = template.render(content=html, data=data, **file_frontmatter)
+                if suffix == ".html":
+                    html = file_frontmatter.content
+                elif suffix == ".md":
+                    html = markdown.markdown(file_frontmatter.content)
+                    if "layout" in file_frontmatter:
+                        template = jinja_env.get_template(file_frontmatter["layout"])
+                        html = template.render(
+                            content=html, data=data, **file_frontmatter
+                        )
+                elif suffix == ".j2":
+                    template = jinja2.Template(file_frontmatter.content)
+                    html = template.render(data=data, **file_frontmatter)
 
                 print("Writing", page_path, "from", filepath)
                 with open(page_path, "w+") as outfile:
                     outfile.write(html)
+
     print("Build Complete!\n")
 
 
