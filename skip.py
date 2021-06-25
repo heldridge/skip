@@ -26,6 +26,16 @@ except ImportError:
     print("No config found, using defaults")
 
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst
+
+    Thank you SO: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
+    """
+
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
 def process_datafiles() -> Dict:
     data_map = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
@@ -33,6 +43,14 @@ def process_datafiles() -> Dict:
         data_map[module_name] = module.get_data()
 
     return data_map
+
+
+def write_page(page_dir, filepath, html):
+    page_path = page_dir / "index.html"
+    print("Writing", page_path, "from", filepath)
+    os.makedirs(page_dir, exist_ok=True)
+    with open(page_path, "w+") as outfile:
+        outfile.write(html)
 
 
 def build_site(site_dir_name, should_ignore):
@@ -66,9 +84,7 @@ def build_site(site_dir_name, should_ignore):
                 with open(filepath) as infile:
                     file_frontmatter = frontmatter.load(infile)
 
-                filedir = site_dir / root / filename[:-3]
-                os.makedirs(filedir, exist_ok=True)
-                page_path = filedir / "index.html"
+                page_dir = site_dir / root / filename[:-3]
 
                 if suffix == ".html":
                     html = file_frontmatter.content
@@ -81,11 +97,28 @@ def build_site(site_dir_name, should_ignore):
                         )
                 elif suffix == ".j2":
                     template = jinja2.Template(file_frontmatter.content)
-                    html = template.render(data=data, **file_frontmatter)
 
-                print("Writing", page_path, "from", filepath)
-                with open(page_path, "w+") as outfile:
-                    outfile.write(html)
+                    if "pagination" in file_frontmatter:
+                        pagination_data = data[file_frontmatter["pagination"]["data"]]
+                        page_size = file_frontmatter["pagination"]["size"]
+
+                        for index, page in enumerate(
+                            chunks(pagination_data, page_size)
+                        ):
+                            html = template.render(
+                                data=data, page=page, **file_frontmatter
+                            )
+                            if index != 0:
+                                new_page_dir = page_dir / str(index)
+                            else:
+                                new_page_dir = page_dir
+                            write_page(new_page_dir, filepath, html)
+
+                        continue
+                    else:
+                        html = template.render(data=data, **file_frontmatter)
+
+                write_page(page_dir, filepath, html)
 
     print("Build Complete!\n")
 
