@@ -5,6 +5,7 @@ import pkgutil
 from typing import Dict
 
 import frontmatter
+from gitignore_parser import parse_gitignore
 import jinja2
 import markdown
 import watchgod
@@ -34,7 +35,7 @@ def process_datafiles() -> Dict:
     return data_map
 
 
-def build_site(site_dir_name):
+def build_site(site_dir_name, should_ignore):
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
@@ -51,7 +52,7 @@ def build_site(site_dir_name):
         # Prune directories we don't want to visit
         del_indexes = []
         for index, dirname in enumerate(dirs):
-            if dirname in ignore_dirs:
+            if dirname in ignore_dirs or should_ignore(os.path.join(root, dirname)):
                 del_indexes.append(index)
         for index in sorted(del_indexes, reverse=True):
             del dirs[index]
@@ -94,7 +95,15 @@ def main():
     )
     args = parser.parse_args()
 
-    build_site(args.output)
+    skipignore_path = pathlib.Path(".skipignore")
+    if skipignore_path.exists():
+        print("Using .skipignore...")
+        should_ignore = parse_gitignore(skipignore_path)
+    else:
+        print("No .skipignore found, using defaults...")
+        should_ignore = lambda _: False
+
+    build_site(args.output, should_ignore)
 
     if args.serve:
         server.run(args.output, args.port)
@@ -102,20 +111,16 @@ def main():
     if args.watch or args.serve:
         print("\nWatching files for changes...")
 
-        skipignore_path = pathlib.Path(".skipignore")
-
-        if skipignore_path.exists():
-            print("Using .skipignore...")
+        if should_ignore is not None:
             for changes in watchgod.watch(
                 ".",
                 watcher_cls=watchers.SkipIgnoreWatcher,
-                watcher_kwargs={"ignore_file_path": skipignore_path},
+                watcher_kwargs={"should_ignore": should_ignore},
             ):
-                build_site(args.output)
+                build_site(args.output, should_ignore)
         else:
-            print("No .skipignore found, using defaults...")
             for changes in watchgod.watch(".", watcher_cls=watchers.SkipDefaultWatcher):
-                build_site(args.output)
+                build_site(args.output, should_ignore)
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ class SkipDefaultWatcher(DefaultWatcher):
 
 
 class SkipIgnoreWatcher(AllWatcher):
-    def __init__(self, root_path: str, ignore_file_path=None) -> None:
-        self.should_ignore = parse_gitignore(ignore_file_path)
+    def __init__(self, root_path: str, should_ignore=None) -> None:
+        self.should_ignore = should_ignore
         super().__init__(root_path)
 
     def should_watch_dir(self, entry: "DirEntry") -> bool:
