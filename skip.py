@@ -203,6 +203,10 @@ def get_pages(ignores, should_ignore, path, data):
     return pages
 
 
+def false(_):
+    return False
+
+
 def build_site(site_dir_name, should_ignore):
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
@@ -258,7 +262,7 @@ def main():
         should_ignore = parse_gitignore(skipignore_path)
     else:
         print("No .skipignore found, using defaults...")
-        should_ignore = lambda _: False
+        should_ignore = false
 
     build_site(args.output, should_ignore)
 
