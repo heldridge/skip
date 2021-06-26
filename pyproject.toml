@@ -15,7 +15,12 @@ gitignore-parser = "^0.0.8"
 
 [tool.poetry.dev-dependencies]
 black = "^21.6b0"
+pyproject-flake8 = "^0.0.1-alpha.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203,"

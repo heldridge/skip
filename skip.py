@@ -1,7 +1,11 @@
 import argparse
+from collections import defaultdict
+import enum
+import json
 import os
 import pathlib
 import pkgutil
+import sys
 from typing import Dict
 
 import frontmatter
@@ -36,6 +40,114 @@ def chunks(lst, n):
         yield lst[i : i + n]
 
 
+class FileType(enum.Enum):
+    HTML = 0
+    JINJA2 = 1
+    MARKDOWN = 2
+    JSON = 3
+    PYTHON = 4
+
+
+SUFFIX_TO_TYPE = {
+    ".html": FileType.HTML,
+    ".j2": FileType.JINJA2,
+    ".md": FileType.MARKDOWN,
+    ".json": FileType.JSON,
+    ".py": FileType.PYTHON,
+}
+
+
+class SourceFile:
+    def __init__(self, entry):
+        self.path = pathlib.Path(entry)
+        self.type = SUFFIX_TO_TYPE[self.path.suffix]
+
+    def __str__(self):
+        return str(self.path)
+
+
+class PageFile(SourceFile):
+    pass
+
+
+class DataFile(SourceFile):
+    def get_data(self):
+        if self.type == FileType.JSON:
+            with open(self.path) as infile:
+                return json.load(infile)
+        elif self.type == FileType.PYTHON:
+            if self.path.parent.name != "":
+                sys.path.append(self.path.parent)
+                module = __import__(self.path.stem)
+
+                data = module.get_data()
+
+            if self.path.parent.name != "":
+                sys.path.remove(self.path.parent)
+
+            return data
+
+
+class SitePage:
+    def __init__(self, source: SourceFile, data: Dict):
+        self.source = source
+        self.data = data
+
+        with open(self.source.path) as infile:
+            metadata, self.content = frontmatter.parse(infile.read())
+
+        self.data = {**self.data, **metadata}
+
+    def render(self, site_dir: pathlib.Path, jinja_env, collections):
+
+        page_dir = site_dir / self.source.path.stem
+
+        if self.source.type == FileType.HTML:
+            html = self.content
+        elif self.source.type == FileType.MARKDOWN:
+            html = markdown.markdown(self.content)
+            if "layout" in self.data:
+                template = jinja_env.get_template(self.data["layout"])
+                html = template.render(
+                    content=html, data=self.data, collections=collections
+                )
+        elif self.source.type == FileType.JINJA2:
+            template = jinja2.Template(self.content)
+
+            if "pagination" in self.data:
+                pagination_source = self.data["pagination"]["data"]
+
+                if pagination_source in self.data:
+                    pagination_data = self.data[pagination_source]
+                elif pagination_source in collections:
+                    pagination_data = collections[pagination_source]
+                else:
+                    print(
+                        f"Warning: pagination source {pagination_source} not found for "
+                        f"{self.source}"
+                    )
+                    pagination_data = []
+
+                for index, items in enumerate(
+                    chunks(pagination_data, self.data["pagination"]["size"])
+                ):
+                    html = template.render(
+                        data=self.data, items=items, collections=collections
+                    )
+                    if index == 0:
+                        new_page_dir = page_dir
+                    else:
+                        new_page_dir = page_dir / str(index)
+                    write_page(new_page_dir, self.source.path, html)
+
+                return
+
+            else:
+                html = template.render(data=self.data, collections=collections)
+
+        write_page(page_dir, self.source.path, html)
+
+
 def process_datafiles() -> Dict:
     data_map = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
@@ -53,6 +165,44 @@ def write_page(page_dir, filepath, html):
         outfile.write(html)
 
 
+def get_pages(ignores, should_ignore, path, data):
+    pages = []
+    page_files = []
+    data_files = []
+    dirs = []
+
+    # Go over all the files to identiy all the data and page sources
+    for entry in os.scandir(path):
+        if entry.name in ignores or should_ignore(entry.path):
+            continue
+        if entry.is_dir():
+            dirs.append(entry.path)
+        elif entry.is_file():
+            entry_path = pathlib.Path(entry.path)
+            suffix = entry_path.suffix
+
+            if suffix in {".html", ".j2", ".md"}:
+                page_files.append(PageFile(entry))
+            elif suffix in {".json"} or (
+                entry_path.suffixes == [".skipdata", ".py"]
+                and entry_path.parent.name
+                != ""  # Ignore python files in the top level directory
+            ):
+                data_files.append(DataFile(entry))
+
+    for data_file in data_files:
+        data = {**data, **data_file.get_data()}
+
+    for page_file in page_files:
+        pages.append(SitePage(page_file, data))
+
+    # Recurse
+    for dir_path in dirs:
+        pages += get_pages(ignores, should_ignore, dir_path, data)
+
+    return pages
+
+
 def build_site(site_dir_name, should_ignore):
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
@@ -66,59 +216,21 @@ def build_site(site_dir_name, should_ignore):
     os.makedirs(site_dir, exist_ok=True)
 
     ignore_dirs = {".git", "data", site_dir_name, "templates", "__pycache__"}
-    for root, dirs, files in os.walk("."):
-        # Prune directories we don't want to visit
-        del_indexes = []
-        for index, dirname in enumerate(dirs):
-            if dirname in ignore_dirs or should_ignore(os.path.join(root, dirname)):
-                del_indexes.append(index)
-        for index in sorted(del_indexes, reverse=True):
-            del dirs[index]
+    pages = get_pages(ignore_dirs, should_ignore, pathlib.Path("."), data)
 
-        for filename in files:
-            filepath = os.path.join(root, filename)
+    # Create Collections
+    collections = defaultdict(list)
+    for page in pages:
+        if "tags" in page.data:
+            tags = page.data["tags"]
+            if isinstance(tags, str):
+                collections[tags].append(page)
+            elif isinstance(tags, list):
+                for tag in tags:
+                    collections[tag].append(page)
 
-            suffix = pathlib.Path(filename).suffix
-
-            if suffix in {".md", ".j2", ".html"}:
-                with open(filepath) as infile:
-                    file_frontmatter = frontmatter.load(infile)
-
-                page_dir = site_dir / root / filename[:-3]
-
-                if suffix == ".html":
-                    html = file_frontmatter.content
-                elif suffix == ".md":
-                    html = markdown.markdown(file_frontmatter.content)
-                    if "layout" in file_frontmatter:
-                        template = jinja_env.get_template(file_frontmatter["layout"])
-                        html = template.render(
-                            content=html, data=data, **file_frontmatter
-                        )
-                elif suffix == ".j2":
-                    template = jinja2.Template(file_frontmatter.content)
-
-                    if "pagination" in file_frontmatter:
-                        pagination_data = data[file_frontmatter["pagination"]["data"]]
-                        page_size = file_frontmatter["pagination"]["size"]
-
-                        for index, page in enumerate(
-                            chunks(pagination_data, page_size)
-                        ):
-                            html = template.render(
-                                data=data, page=page, **file_frontmatter
-                            )
-                            if index != 0:
-                                new_page_dir = page_dir / str(index)
-                            else:
-                                new_page_dir = page_dir
-                            write_page(new_page_dir, filepath, html)
-
-                        continue
-                    else:
-                        html = template.render(data=data, **file_frontmatter)
-
-                write_page(page_dir, filepath, html)
+    for page in pages:
+        page.render(site_dir, jinja_env, collections)
 
     print("Build Complete!\n")
 
