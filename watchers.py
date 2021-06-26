@@ -1,6 +1,5 @@
-from logging import root
-from watchgod.watcher import AllWatcher
-from gitignore_parser import parse_gitignore
+from os import DirEntry
+
 from watchgod import AllWatcher, DefaultWatcher
 
 
@@ -15,8 +14,8 @@ class SkipIgnoreWatcher(AllWatcher):
         self.should_ignore = should_ignore
         super().__init__(root_path)
 
-    def should_watch_dir(self, entry: "DirEntry") -> bool:
+    def should_watch_dir(self, entry: DirEntry) -> bool:
         return not self.should_ignore(entry.path)
 
-    def should_watch_file(self, entry: "DirEntry") -> bool:
+    def should_watch_file(self, entry: DirEntry) -> bool:
         return not self.should_ignore(entry.path)
