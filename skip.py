@@ -165,6 +165,22 @@ def write_page(page_dir, filepath, html):
         outfile.write(html)
 
 
+def load_site_file(entry, page_files, data_files):
+    entry_path = pathlib.Path(entry.path)
+    suffix = entry_path.suffix
+
+    if suffix in {".html", ".j2", ".md"}:
+        return page_files + [PageFile(entry)], data_files
+    elif suffix in {".json"} or (
+        entry_path.suffixes == [".skipdata", ".py"]
+        and entry_path.parent.name
+        != ""  # Ignore python files in the top level directory
+    ):
+        return page_files, data_files + [DataFile(entry)]
+    else:
+        return page_files, data_files
+
+
 def get_pages(ignores, should_ignore, path, data):
     pages = []
     page_files = []
@@ -178,17 +194,7 @@ def get_pages(ignores, should_ignore, path, data):
         if entry.is_dir():
             dirs.append(entry.path)
         elif entry.is_file():
-            entry_path = pathlib.Path(entry.path)
-            suffix = entry_path.suffix
-
-            if suffix in {".html", ".j2", ".md"}:
-                page_files.append(PageFile(entry))
-            elif suffix in {".json"} or (
-                entry_path.suffixes == [".skipdata", ".py"]
-                and entry_path.parent.name
-                != ""  # Ignore python files in the top level directory
-            ):
-                data_files.append(DataFile(entry))
+            page_files, data_files = load_site_file(entry, page_files, data_files)
 
     for data_file in data_files:
         data = {**data, **data_file.get_data()}
