@@ -8,4 +8,5 @@ templates/
 css/
 config.py
 testo/
+.vscode/
 .skipignore
