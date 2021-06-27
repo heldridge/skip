@@ -203,6 +203,19 @@ def get_pages(ignores, should_ignore, path, data):
     return pages
 
 
+def get_collections(pages):
+    collections = defaultdict(list)
+    for page in pages:
+        if "tags" in page.data:
+            tags = page.data["tags"]
+            if isinstance(tags, str):
+                collections[tags].append(page)
+            elif isinstance(tags, list):
+                for tag in tags:
+                    collections[tag].append(page)
+    return collections
+
+
 def false(_):
     return False
 
@@ -221,17 +234,7 @@ def build_site(site_dir_name, should_ignore):
 
     ignore_dirs = {".git", "data", site_dir_name, "templates", "__pycache__"}
     pages = get_pages(ignore_dirs, should_ignore, pathlib.Path("."), data)
-
-    # Create Collections
-    collections = defaultdict(list)
-    for page in pages:
-        if "tags" in page.data:
-            tags = page.data["tags"]
-            if isinstance(tags, str):
-                collections[tags].append(page)
-            elif isinstance(tags, list):
-                for tag in tags:
-                    collections[tag].append(page)
+    collections = get_collections(pages)
 
     for page in pages:
         page.render(site_dir, jinja_env, collections)
