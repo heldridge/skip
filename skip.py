@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import pkgutil
 import sys
-from typing import Any, Callable, List, Mapping
+from typing import Any, Callable, Generator, List, Mapping
 
 import frontmatter
 from gitignore_parser import parse_gitignore
@@ -31,7 +31,7 @@ except ImportError:
     print("No config found, using defaults")
 
 
-def chunks(lst: List, n: int):
+def chunks(lst: List, n: int) -> Generator[List, None, None]:
     """Yield successive n-sized chunks from lst
 
     Thank you SO: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
@@ -58,11 +58,11 @@ class SourceFile:
         ".py": FileType.PYTHON,
     }
 
-    def __init__(self, entry):
+    def __init__(self, entry) -> None:
         self.path = Path(entry)
         self.type = self.SUFFIX_TO_TYPE[self.path.suffix]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.path)
 
 
@@ -80,14 +80,14 @@ class DataFile(SourceFile):
             with open(self.path) as infile:
                 return json.load(infile)
         elif self.type == FileType.PYTHON:
+            parent_path = str(self.path.parent)
             if self.path.parent.name != "":
-                sys.path.append(self.path.parent)
+                sys.path.append(parent_path)
                 module = __import__(self.path.stem)
 
                 data = module.get_data()
 
-            if self.path.parent.name != "":
-                sys.path.remove(self.path.parent)
+                sys.path.remove(parent_path)
 
             return data
         else:
@@ -95,7 +95,7 @@ class DataFile(SourceFile):
 
 
 class SitePage:
-    def __init__(self, source: SourceFile, data: dict):
+    def __init__(self, source: SourceFile, data: dict) -> None:
         self.source = source
         self.data = data
 
@@ -109,7 +109,7 @@ class SitePage:
         site_dir: Path,
         jinja_env: jinja2.Environment,
         collections: Mapping[str, List["SitePage"]],
-    ):
+    ) -> None:
 
         page_dir = site_dir / self.source.path.stem
 
@@ -168,7 +168,7 @@ def process_datafiles() -> dict:
     return data_map
 
 
-def write_page(page_dir: Path, filepath: str, html: str):
+def write_page(page_dir: Path, filepath: str, html: str) -> None:
     page_path = page_dir / "index.html"
     print("Writing", page_path, "from", filepath)
     os.makedirs(page_dir, exist_ok=True)
@@ -224,7 +224,7 @@ def get_pages(
     return pages
 
 
-def get_collections(pages: List[SitePage]):
+def get_collections(pages: List[SitePage]) -> Mapping[str, List[SitePage]]:
     collections = defaultdict(list)
     for page in pages:
         if "tags" in page.data:
@@ -241,7 +241,7 @@ def false(_: Any) -> bool:
     return False
 
 
-def build_site(site_dir_name: str, should_ignore: Callable[[str], bool]):
+def build_site(site_dir_name: str, should_ignore: Callable[[str], bool]) -> None:
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
