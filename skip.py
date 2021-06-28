@@ -11,7 +11,6 @@ from typing import Any, Callable, Generator, List, Mapping
 import frontmatter
 from gitignore_parser import parse_gitignore
 import jinja2
-from jinja2.nodes import Call
 import markdown
 import watchgod
 
