@@ -6,7 +6,7 @@ _site/
 sandbox/
 templates/
 css/
-config.py
 testo/
-.vscode/
 .skipignore
+settings.py
+.vscode/

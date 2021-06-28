@@ -1,10 +1,12 @@
 import argparse
 from collections import defaultdict
 import enum
+import errno
 import json
 import os
 from pathlib import Path
 import pkgutil
+import shutil
 import sys
 from typing import Any, Callable, Generator, List, Mapping
 
@@ -25,9 +27,10 @@ except ImportError:
     USE_DATA_DIR = False
 
 try:
-    import config
+    import settings
 except ImportError:
-    print("No config found, using defaults")
+    print("No settings file found, using defaults")
+    USE_SETTINGS = False
 
 
 def chunks(lst: List, n: int) -> Generator[List, None, None]:
@@ -240,7 +243,7 @@ def false(_: Any) -> bool:
     return False
 
 
-def build_site(site_dir_name: str, should_ignore: Callable[[str], bool]) -> None:
+def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
     print("Building Site")
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
@@ -249,17 +252,34 @@ def build_site(site_dir_name: str, should_ignore: Callable[[str], bool]) -> None
     else:
         data = {}
 
-    site_dir = Path(site_dir_name)
+    site_dir = Path(config["output"])
     os.makedirs(site_dir, exist_ok=True)
 
-    ignore_dirs = {".git", "data", site_dir_name, "templates", "__pycache__"}
+    ignore_dirs = {".git", "data", config["output"], "templates", "__pycache__"}
     pages = get_pages(ignore_dirs, should_ignore, Path("."), data)
     collections = get_collections(pages)
 
     for page in pages:
         page.render(site_dir, jinja_env, collections)
 
-    print("Build Complete!\n")
+    for copy_target in config["copy"]:
+        if ":" in copy_target:
+            src, dest = copy_target.split(":")
+        else:
+            src = dest = copy_target
+
+        dest = site_dir / dest
+        print(f"Copying {src} to {dest}")
+
+        try:
+            shutil.copytree(src, dest, dirs_exist_ok=True)
+        except OSError as e:
+            if e.errno == errno.ENOTDIR:
+                shutil.copy(src, dest)
+            else:
+                raise e
+
+    print("Build Complete!")
 
 
 def main():
@@ -275,7 +295,16 @@ def main():
         "-o",
         "--output",
         help="The directory to output the built site to",
-        default="_site",
+    )
+    parser.add_argument(
+        "-c",
+        "--copy",
+        help=(
+            "Files or directories to copy into the root of site folder. Use a colon to "
+            'specify a new path. For example, "x.css:style/x.css" will copy the file '
+            'to "./_site/style/x.css"'
+        ),
+        nargs="+",
     )
     args = parser.parse_args()
 
@@ -287,10 +316,23 @@ def main():
         print("No .skipignore found, using defaults...")
         should_ignore = false
 
-    build_site(args.output, should_ignore)
+    # Default config
+    config = {"output": "_site", "copy": []}
+
+    if settings:
+        config = {**config, **vars(settings).get("OPTIONS", {})}
+
+    # CLI flags take precedence over settings file
+    dict_args = vars(args)
+    arg_config_options = ["output", "port", "copy"]
+    for option in arg_config_options:
+        if dict_args[option] is not None:
+            config[option] = dict_args[option]
+
+    build_site(config, should_ignore)
 
     if args.serve:
-        server.run(args.output, args.port)
+        server.run(config)
 
     if args.watch or args.serve:
         print("\nWatching files for changes...")
@@ -301,10 +343,10 @@ def main():
                 watcher_cls=watchers.SkipIgnoreWatcher,
                 watcher_kwargs={"should_ignore": should_ignore},
             ):
-                build_site(args.output, should_ignore)
+                build_site(config, should_ignore)
         else:
             for changes in watchgod.watch(".", watcher_cls=watchers.SkipDefaultWatcher):
-                build_site(args.output, should_ignore)
+                build_site(config, should_ignore)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import errno
 import http.server
 import functools
 import socketserver
@@ -19,28 +20,26 @@ def _start_server_on_port(
         httpd.serve_forever()
 
 
-def run_server(directory: str, port: int):
-    Handler = functools.partial(QuietHander, directory=directory)
+def run_server(config: dict):
+    Handler = functools.partial(QuietHander, directory=config["output"])
 
-    if port is None:
+    if config.get("port") is None:
         current_port = 8080
         while current_port <= 65535:
             try:
                 _start_server_on_port(Handler, current_port)
             except OSError as e:
                 # errno 48: Address already in use
-                if e.errno == 48:
+                if e.errno == errno.EADDRINUSE:
                     current_port += 1
                     continue
                 else:
                     raise e
 
     else:
-        _start_server_on_port(Handler, port)
+        _start_server_on_port(Handler, config["port"])
 
 
-def run(directory: str, port: int):
-    server_thread = threading.Thread(
-        target=run_server, args=(directory, port), daemon=True
-    )
+def run(config: dict):
+    server_thread = threading.Thread(target=run_server, args=(config,), daemon=True)
     server_thread.start()
