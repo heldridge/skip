@@ -168,7 +168,7 @@ def process_datafiles() -> dict:
     return data_map
 
 
-def write_page(page_dir: Path, filepath: str, html: str) -> None:
+def write_page(page_dir: Path, filepath: Path, html: str) -> None:
     page_path = page_dir / "index.html"
     print("Writing", page_path, "from", filepath)
     os.makedirs(page_dir, exist_ok=True)
