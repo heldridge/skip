@@ -2,6 +2,7 @@ import http.server
 import functools
 import socketserver
 import threading
+from typing import Callable
 
 
 class QuietHander(http.server.SimpleHTTPRequestHandler):
@@ -10,13 +11,15 @@ class QuietHander(http.server.SimpleHTTPRequestHandler):
         return
 
 
-def _start_server_on_port(handler, port):
+def _start_server_on_port(
+    handler: Callable[..., http.server.SimpleHTTPRequestHandler], port: int
+):
     with socketserver.TCPServer(("", port), handler) as httpd:
         print(f"Serving at localhost:{port}")
         httpd.serve_forever()
 
 
-def run_server(directory, port):
+def run_server(directory: str, port: int):
     Handler = functools.partial(QuietHander, directory=directory)
 
     if port is None:
@@ -36,7 +39,7 @@ def run_server(directory, port):
         _start_server_on_port(Handler, port)
 
 
-def run(directory, port):
+def run(directory: str, port: int):
     server_thread = threading.Thread(
         target=run_server, args=(directory, port), daemon=True
     )
