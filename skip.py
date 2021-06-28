@@ -1,13 +1,12 @@
 import argparse
 from collections import defaultdict
-from collections.abc import Callable
 import enum
 import json
 import os
 from pathlib import Path
 import pkgutil
 import sys
-from typing import Any, List, Mapping
+from typing import Any, Callable, List, Mapping
 
 import frontmatter
 from gitignore_parser import parse_gitignore
