@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Generator
 
 import frontmatter
+import jinja2
 
 
 def chunks(lst: list, n: int) -> Generator[list, None, None]:
@@ -22,6 +23,10 @@ class SitePage:
         self.data = data
         self.collections = collections
 
+    def render(self, jinja2_env: jinja2.Environment) -> str:
+        template = jinja2_env.from_string(self.source.content)
+        return template.render(data=self.data, collections=self.collections)
+
 
 class PaginationSitePage(SitePage):
     def __init__(
@@ -35,6 +40,12 @@ class PaginationSitePage(SitePage):
         super().__init__(source, data, collections)
         self.index = index
         self.items = items
+
+    def render(self, jinja2_env: jinja2.Environment) -> str:
+        template = jinja2_env.from_string(self.source.content)
+        return template.render(
+            data=self.data, collections=self.collections, items=self.items
+        )
 
 
 class InvalidFileExtensionException(Exception):
