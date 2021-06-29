@@ -60,8 +60,8 @@ class SourceFile:
         ".py": FileType.PYTHON,
     }
 
-    def __init__(self, entry) -> None:
-        self.path = Path(entry)
+    def __init__(self, path: Path) -> None:
+        self.path = path
         self.type = self.SUFFIX_TO_TYPE[self.path.suffix]
 
     def __str__(self) -> str:
@@ -185,13 +185,13 @@ def load_site_file(
     suffix = entry_path.suffix
 
     if suffix in {".html", ".j2", ".md"}:
-        return page_files + [PageFile(entry)], data_files
+        return page_files + [PageFile(entry_path)], data_files
     elif suffix in {".json"} or (
         entry_path.suffixes == [".skipdata", ".py"]
         and entry_path.parent.name
         != ""  # Ignore python files in the top level directory
     ):
-        return page_files, data_files + [DataFile(entry)]
+        return page_files, data_files + [DataFile(entry_path)]
     else:
         return page_files, data_files
 
