@@ -2,32 +2,41 @@ from pathlib import Path
 import unittest
 
 from sources import (
+    DataFileFactory,
     HTMLFile,
     InvalidFileExtensionException,
     Jinja2File,
     MarkdownFile,
-    SourceFileFactory,
+    PageFileFactory,
 )
 
 
 class TestSourceFileFactory(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.sff = SourceFileFactory()
+        cls.pff = PageFileFactory()
+        cls.dff = DataFileFactory()
         return super().setUpClass()
 
     def test_accepts_known_extensions(self):
-        for file in ["pagination.j2", "single-tag.md", "tags.html", "my-data.py"]:
+        for file in ["pagination.j2", "single-tag.md", "tags.html"]:
             path = Path(f"tests/files/{file}")
-            self.sff.load_source_file(path, {})
+            self.pff.load_source_file(path, {})
+
+        for file in ["my-data.py", "my-data.json"]:
+            path = Path(f"tests/files/{file}")
+            self.dff.load_source_file(path)
 
     def test_rejects_unknown_extensions(self):
         for extension in {".htmx", ".doc", ".njk"}:
             path = Path(f"file{extension}")
             with self.assertRaises(InvalidFileExtensionException) as context:
-                self.sff.load_source_file(path, {})
+                self.pff.load_source_file(path, {})
+                self.assertTrue(extension in str(context.exception))
 
-            self.assertTrue(extension in str(context.exception))
+            with self.assertRaises(InvalidFileExtensionException) as context:
+                self.dff.load_source_file(path)
+                self.assertTrue(extension in str(context.exception))
 
 
 class TestPageFile(unittest.TestCase):

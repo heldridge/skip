@@ -72,7 +72,7 @@ class SourceFile:
 
 
 class PageFile(SourceFile):
-    def __init__(self, path: Path, data) -> None:
+    def __init__(self, path: Path, data: dict) -> None:
         super().__init__(path)
 
         with open(self.path) as infile:
@@ -155,25 +155,33 @@ class PythonFile(DataFile):
             return data
 
 
-class SourceFileFactory:
-    suffix_to_class_map = {
-        ".html": HTMLFile,
-        ".md": MarkdownFile,
-        ".j2": Jinja2File,
-        ".json": JSONFile,
-        ".py": PythonFile,
-    }
+class DataFileFactory:
+    suffix_to_class_map = {".json": JSONFile, ".py": PythonFile}
 
-    def load_source_file(self, path: Path, data: dict) -> SourceFile:
+    def is_valid_file(self, path: Path) -> bool:
+        return path.suffix in self.suffix_to_class_map
+
+    def load_source_file(self, path: Path) -> DataFile:
         suffix = path.suffix
-        if suffix not in self.suffix_to_class_map:
+        if not self.is_valid_file(path):
             raise InvalidFileExtensionException(
-                f"No SourceFile type found with suffix {suffix}"
+                f"No DataFile type found with suffix {suffix}"
             )
 
-        target_class = self.suffix_to_class_map[suffix]
+        return self.suffix_to_class_map[suffix](path)
 
-        if issubclass(target_class, PageFile):
-            return target_class(path, data)
-        else:
-            return target_class(path)
+
+class PageFileFactory:
+    suffix_to_class_map = {".html": HTMLFile, ".md": MarkdownFile, ".j2": Jinja2File}
+
+    def is_valid_file(self, path: Path) -> bool:
+        return path.suffix in self.suffix_to_class_map
+
+    def load_source_file(self, path: Path, data: dict) -> DataFile:
+        suffix = path.suffix
+        if not self.is_valid_file(path):
+            raise InvalidFileExtensionException(
+                f"No PageFile type found with suffix {suffix}"
+            )
+
+        return self.suffix_to_class_map[suffix](path, data)
