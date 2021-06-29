@@ -72,34 +72,33 @@ class SourceFile:
 
 
 class PageFile(SourceFile):
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, data) -> None:
         super().__init__(path)
 
         with open(self.path) as infile:
-            self.metadata, self.content = frontmatter.parse(infile.read())
+            metadata, self.content = frontmatter.parse(infile.read())
 
-        if "tags" in self.metadata:
-            if isinstance(self.metadata["tags"], str):
-                self.tags: set[str] = set()
-                self.tags.add(self.metadata["tags"])
-            elif isinstance(self.metadata["tags"], list):
-                self.tags = set(self.metadata["tags"])
+        self.data = {**data, **metadata}
+
+        if "tags" in self.data:
+            if isinstance(self.data["tags"], str):
+                self.tags = set()
+                self.tags.add(self.data["tags"])
+            elif isinstance(self.data["tags"], list):
+                self.tags = set(self.data["tags"])
             else:
                 raise InvalidTagsException(
                     f"Invalid tags for file at {self.path}. Expected <str> or <list>, "
-                    f"got {type(self.metadata['tags'])}"
+                    f"got {type(self.data['tags'])}"
                 )
 
-    def get_pages(
-        self, data: dict, collections: dict[str, list["PageFile"]]
-    ) -> list[SitePage]:
-        data = {**data, **self.metadata}
-        if "pagination" in self.metadata:
+    def get_pages(self, collections: dict[str, list["PageFile"]]) -> list[SitePage]:
+        if "pagination" in self.data:
 
-            pagination_source = self.metadata["pagination"]["data"]
+            pagination_source = self.data["pagination"]["data"]
 
-            if pagination_source in data:
-                pagination_data = data[pagination_source]
+            if pagination_source in self.data:
+                pagination_data = self.data[pagination_source]
             elif pagination_source in collections:
                 pagination_data = collections[pagination_source]
             else:
@@ -107,12 +106,14 @@ class PageFile(SourceFile):
 
             pages = []
             for index, items in enumerate(
-                chunks(pagination_data, self.metadata["pagination"]["size"])
+                chunks(pagination_data, self.data["pagination"]["size"])
             ):
-                pages.append(PaginationSitePage(self, data, collections, index, items))
+                pages.append(
+                    PaginationSitePage(self, self.data, collections, index, items)
+                )
             return pages
         else:
-            return [SitePage(self, data, collections)]
+            return [SitePage(self, self.data, collections)]
 
 
 class HTMLFile(PageFile):
@@ -163,11 +164,16 @@ class SourceFileFactory:
         ".py": PythonFile,
     }
 
-    def load_source_file(self, path: Path) -> SourceFile:
+    def load_source_file(self, path: Path, data: dict) -> SourceFile:
         suffix = path.suffix
         if suffix not in self.suffix_to_class_map:
             raise InvalidFileExtensionException(
                 f"No SourceFile type found with suffix {suffix}"
             )
 
-        return self.suffix_to_class_map[suffix](path)
+        target_class = self.suffix_to_class_map[suffix]
+
+        if issubclass(target_class, PageFile):
+            return target_class(path, data)
+        else:
+            return target_class(path)
