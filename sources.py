@@ -1,4 +1,5 @@
 import json
+import markdown
 from pathlib import Path
 import sys
 from typing import Any, Generator, Union
@@ -26,7 +27,7 @@ class SitePage:
         self.collections = collections
 
     def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.source.content)
+        template = jinja2_env.from_string(self.source.get_html())
         return template.render(data=self.data, collections=self.collections)
 
 
@@ -44,7 +45,7 @@ class PaginationSitePage(SitePage):
         self.items = items
 
     def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.source.content)
+        template = jinja2_env.from_string(self.source.get_html())
         return template.render(
             data=self.data, collections=self.collections, items=self.items
         )
@@ -120,9 +121,15 @@ class PageFile(SourceFile):
         else:
             return [SitePage(self, self.data, collections)]
 
+    def get_html(self):
+        return self.content
+
 
 class MarkdownFile(PageFile):
     suffixes = {".md"}
+
+    def get_html(self):
+        return markdown.markdown(self.content)
 
 
 class Jinja2File(PageFile):
