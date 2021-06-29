@@ -30,6 +30,10 @@ class SitePage:
         template = jinja2_env.from_string(self.source.get_html())
         return template.render(data=self.data, collections=self.collections)
 
+    def get_permalink(self):
+        path = self.source.path
+        return path.parent / path.stem / "index.html"
+
 
 class PaginationSitePage(SitePage):
     def __init__(
@@ -49,6 +53,13 @@ class PaginationSitePage(SitePage):
         return template.render(
             data=self.data, collections=self.collections, items=self.items
         )
+
+    def get_permalink(self):
+        if self.index == 0:
+            return super().get_permalink()
+        else:
+            path = self.source.path
+            return path.parent / path.stem / str(self.index) / "index.html"
 
 
 class InvalidFileExtensionException(Exception):
