@@ -1,22 +1,18 @@
 import argparse
 from collections import defaultdict
-import enum
 import errno
-import json
 import os
 from pathlib import Path
 import pkgutil
 import shutil
-import sys
-from typing import Any, Callable, Generator, List, Mapping
+from typing import Any, Callable, List, Mapping
 
-import frontmatter
 from gitignore_parser import parse_gitignore
 import jinja2
-import markdown
 import watchgod
 
 import server
+from sources import DataFile, DataFileFactory, PageFile, PageFileFactory, SitePage
 import watchers
 
 
@@ -33,134 +29,6 @@ except ImportError:
     USE_SETTINGS = False
 
 
-def chunks(lst: List, n: int) -> Generator[List, None, None]:
-    """Yield successive n-sized chunks from lst
-
-    Thank you SO: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
-    """
-
-    for i in range(0, len(lst), n):
-        yield lst[i : i + n]
-
-
-class FileType(enum.Enum):
-    HTML = 0
-    JINJA2 = 1
-    MARKDOWN = 2
-    JSON = 3
-    PYTHON = 4
-
-
-class SourceFile:
-    SUFFIX_TO_TYPE = {
-        ".html": FileType.HTML,
-        ".j2": FileType.JINJA2,
-        ".md": FileType.MARKDOWN,
-        ".json": FileType.JSON,
-        ".py": FileType.PYTHON,
-    }
-
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        self.type = self.SUFFIX_TO_TYPE[self.path.suffix]
-
-    def __str__(self) -> str:
-        return str(self.path)
-
-
-class PageFile(SourceFile):
-    pass
-
-
-class UnimplementedDataFileTypeException(Exception):
-    pass
-
-
-class DataFile(SourceFile):
-    def get_data(self) -> dict:
-        if self.type == FileType.JSON:
-            with open(self.path) as infile:
-                return json.load(infile)
-        elif self.type == FileType.PYTHON:
-            parent_path = str(self.path.parent)
-            if self.path.parent.name != "":
-                sys.path.append(parent_path)
-                module = __import__(self.path.stem)
-
-                data = module.get_data()
-
-                sys.path.remove(parent_path)
-
-            return data
-        else:
-            raise UnimplementedDataFileTypeException(self.type)
-
-
-class SitePage:
-    def __init__(self, source: PageFile, data: dict) -> None:
-        self.source = source
-        self.data = data
-
-        with open(self.source.path) as infile:
-            metadata, self.content = frontmatter.parse(infile.read())
-
-        self.data = {**self.data, **metadata}
-
-    def render(
-        self,
-        site_dir: Path,
-        jinja_env: jinja2.Environment,
-        collections: Mapping[str, List["SitePage"]],
-    ) -> None:
-
-        page_dir = site_dir / self.source.path.stem
-
-        if self.source.type == FileType.HTML:
-            html = self.content
-        elif self.source.type == FileType.MARKDOWN:
-            html = markdown.markdown(self.content)
-            if "layout" in self.data:
-                template = jinja_env.get_template(self.data["layout"])
-                html = template.render(
-                    content=html, data=self.data, collections=collections
-                )
-        elif self.source.type == FileType.JINJA2:
-            template = jinja2.Template(self.content)
-
-            if "pagination" in self.data:
-                pagination_source = self.data["pagination"]["data"]
-
-                if pagination_source in self.data:
-                    pagination_data = self.data[pagination_source]
-                elif pagination_source in collections:
-                    pagination_data = collections[pagination_source]
-                else:
-                    print(
-                        f"Warning: pagination source {pagination_source} not found for "
-                        f"{self.source}"
-                    )
-                    pagination_data = []
-
-                for index, items in enumerate(
-                    chunks(pagination_data, self.data["pagination"]["size"])
-                ):
-                    html = template.render(
-                        data=self.data, items=items, collections=collections
-                    )
-                    if index == 0:
-                        new_page_dir = page_dir
-                    else:
-                        new_page_dir = page_dir / str(index)
-                    write_page(new_page_dir, self.source.path, html)
-
-                return
-
-            else:
-                html = template.render(data=self.data, collections=collections)
-
-        write_page(page_dir, self.source.path, html)
-
-
 def process_datafiles() -> dict:
     data_map = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
@@ -170,40 +38,24 @@ def process_datafiles() -> dict:
     return data_map
 
 
-def write_page(page_dir: Path, filepath: Path, html: str) -> None:
-    page_path = page_dir / "index.html"
-    print("Writing", page_path, "from", filepath)
-    os.makedirs(page_dir, exist_ok=True)
-    with open(page_path, "w+") as outfile:
+def write_page(site_dir: Path, permalink: Path, filepath: Path, html: str) -> None:
+    full_path = site_dir / permalink
+    print("Writing", full_path, "from", filepath)
+    os.makedirs(full_path.parent, exist_ok=True)
+    with open(full_path, "w+") as outfile:
         outfile.write(html)
 
 
-def load_site_file(
-    entry: os.DirEntry, page_files: List[PageFile], data_files: List[DataFile]
-) -> tuple[List[PageFile], List[DataFile]]:
-    entry_path = Path(entry.path)
-    suffix = entry_path.suffix
-
-    if suffix in {".html", ".j2", ".md"}:
-        return page_files + [PageFile(entry_path)], data_files
-    elif suffix in {".json"} or (
-        entry_path.suffixes == [".skipdata", ".py"]
-        and entry_path.parent.name
-        != ""  # Ignore python files in the top level directory
-    ):
-        return page_files, data_files + [DataFile(entry_path)]
-    else:
-        return page_files, data_files
-
-
-def get_pages(
+def get_page_files(
     ignores: set[str], should_ignore: Callable[[str], bool], path: Path, data: dict
-) -> List[SitePage]:
-    pages = []
+) -> List[PageFile]:
+    page_paths = []
     page_files: List[PageFile] = []
     data_files: List[DataFile] = []
     dirs = []
 
+    pff = PageFileFactory()
+    dff = DataFileFactory()
     # Go over all the files to identiy all the data and page sources
     for entry in os.scandir(path):
         if entry.name in ignores or should_ignore(entry.path):
@@ -211,31 +63,32 @@ def get_pages(
         if entry.is_dir():
             dirs.append(Path(entry.path))
         elif entry.is_file():
-            page_files, data_files = load_site_file(entry, page_files, data_files)
+            path = Path(entry.path)
+            if pff.is_valid_file(path):
+                # Don't load pages yet because we need to process all the data first
+                page_paths.append(path)
+            elif dff.is_valid_file(path):
+                data_files.append(dff.load_source_file(path))
 
     for data_file in data_files:
         data = {**data, **data_file.get_data()}
 
-    for page_file in page_files:
-        pages.append(SitePage(page_file, data))
+    for page_path in page_paths:
+        page_files.append(pff.load_source_file(page_path, data))
 
     # Recurse
     for dir_path in dirs:
-        pages += get_pages(ignores, should_ignore, dir_path, data)
+        page_files += get_page_files(ignores, should_ignore, dir_path, data)
 
-    return pages
+    return page_files
 
 
-def get_collections(pages: List[SitePage]) -> Mapping[str, List[SitePage]]:
+def get_collections(pages: List[PageFile]) -> Mapping[str, List[PageFile]]:
     collections = defaultdict(list)
     for page in pages:
-        if "tags" in page.data:
-            tags = page.data["tags"]
-            if isinstance(tags, str):
-                collections[tags].append(page)
-            elif isinstance(tags, list):
-                for tag in tags:
-                    collections[tag].append(page)
+        for tag in page.tags:
+            collections[tag].append(page)
+
     return collections
 
 
@@ -245,7 +98,6 @@ def false(_: Any) -> bool:
 
 def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
     print("Building Site")
-    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
     if USE_DATA_DIR:
         data = process_datafiles()
@@ -253,14 +105,17 @@ def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
         data = {}
 
     site_dir = Path(config["output"])
-    os.makedirs(site_dir, exist_ok=True)
 
     ignore_dirs = {".git", "data", config["output"], "templates", "__pycache__"}
-    pages = get_pages(ignore_dirs, should_ignore, Path("."), data)
-    collections = get_collections(pages)
+    page_files = get_page_files(ignore_dirs, should_ignore, Path("."), data)
+    collections = get_collections(page_files)
 
-    for page in pages:
-        page.render(site_dir, jinja_env, collections)
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
+    for page_file in page_files:
+        pages = page_file.get_pages(collections)
+        for page in pages:
+            html = page.render(jinja_env)
+            write_page(site_dir, page.get_permalink(), page.source.path, html)
 
     for copy_target in config["copy"]:
         if ":" in copy_target:
