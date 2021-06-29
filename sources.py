@@ -1,10 +1,40 @@
 from pathlib import Path
+from typing import Generator
 
 import frontmatter
 
 
+def chunks(lst: list, n: int) -> Generator[list, None, None]:
+    """Yield successive n-sized chunks from lst
+
+    Thank you SO: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
+    """
+
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
 class SitePage:
-    pass
+    def __init__(
+        self, source: "PageFile", data: dict, collections: dict[str, list["PageFile"]]
+    ) -> None:
+        self.source = source
+        self.data = data
+        self.collections = collections
+
+
+class PaginationSitePage(SitePage):
+    def __init__(
+        self,
+        source: "PageFile",
+        data: dict,
+        collections: dict[str, list["PageFile"]],
+        index: int,
+        items: list,
+    ) -> None:
+        super().__init__(source, data, collections)
+        self.index = index
+        self.items = items
 
 
 class InvalidFileExtensionException(Exception):
@@ -12,6 +42,10 @@ class InvalidFileExtensionException(Exception):
 
 
 class InvalidTagsException(Exception):
+    pass
+
+
+class MissingPaginationSourceException(Exception):
     pass
 
 
@@ -28,21 +62,44 @@ class PageFile(SourceFile):
     def __init__(self, path: Path) -> None:
         super().__init__(path)
 
-        post = frontmatter.load(self.path)
-        if "tags" in post:
-            if isinstance(post["tags"], str):
+        with open(self.path) as infile:
+            self.metadata, self.content = frontmatter.parse(infile.read())
+
+        if "tags" in self.metadata:
+            if isinstance(self.metadata["tags"], str):
                 self.tags: set[str] = set()
-                self.tags.add(post["tags"])
-            elif isinstance(post["tags"], list):
-                self.tags = set(post["tags"])
+                self.tags.add(self.metadata["tags"])
+            elif isinstance(self.metadata["tags"], list):
+                self.tags = set(self.metadata["tags"])
             else:
                 raise InvalidTagsException(
                     f"Invalid tags for file at {self.path}. Expected <str> or <list>, "
-                    f"got {type(post['tags'])}"
+                    f"got {type(self.metadata['tags'])}"
                 )
 
-    def get_pages(self) -> list[SitePage]:
-        pass
+    def get_pages(
+        self, data: dict, collections: dict[str, list["PageFile"]]
+    ) -> list[SitePage]:
+        data = {**data, **self.metadata}
+        if "pagination" in self.metadata:
+
+            pagination_source = self.metadata["pagination"]["data"]
+
+            if pagination_source in data:
+                pagination_data = data[pagination_source]
+            elif pagination_source in collections:
+                pagination_data = collections[pagination_source]
+            else:
+                raise MissingPaginationSourceException(pagination_source)
+
+            pages = []
+            for index, items in enumerate(
+                chunks(pagination_data, self.metadata["pagination"]["size"])
+            ):
+                pages.append(PaginationSitePage(self, data, collections, index, items))
+            return pages
+        else:
+            return [SitePage(self, data, collections)]
 
 
 class HTMLFile(PageFile):
