@@ -94,6 +94,8 @@ class PageFile(SourceFile):
                     f"Invalid tags for file at {self.path}. Expected <str> or <list>, "
                     f"got {type(self.data['tags'])}"
                 )
+        else:
+            self.tags = []
 
     def get_pages(self, collections: dict[str, list["PageFile"]]) -> list[SitePage]:
         if "pagination" in self.data:
