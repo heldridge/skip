@@ -3,7 +3,6 @@ import unittest
 
 from sources import (
     DataFileFactory,
-    HTMLFile,
     InvalidFileExtensionException,
     Jinja2File,
     MarkdownFile,
@@ -43,7 +42,7 @@ class TestPageFile(unittest.TestCase):
     def test_loads_tags(self):
         path = Path("tests/files/tags.html")
 
-        page_file = HTMLFile(path, {})
+        page_file = Jinja2File(path, {})
         self.assertEqual(page_file.tags, {"a", "b", "c"})
 
     def test_loads_single_tag(self):
@@ -55,7 +54,7 @@ class TestPageFile(unittest.TestCase):
 
 class TestGetPages(unittest.TestCase):
     def test_returns_single_page(self):
-        html_file = HTMLFile(Path("tests/files/tags.html"), {})
+        html_file = Jinja2File(Path("tests/files/tags.html"), {})
         pages = html_file.get_pages({})
         self.assertEqual(len(pages), 1)
         self.assertEqual(pages[0].source.content, "<h1>Hello</h1>")

@@ -63,10 +63,10 @@ class MissingPaginationSourceException(Exception):
 
 
 class SourceFile:
-    suffix: str
+    suffixes: set
 
     def __init__(self, path: Path) -> None:
-        if path.suffix != self.suffix:
+        if path.suffix not in self.suffixes:
             raise InvalidFileExtensionException(path.suffix)
         self.path = path
 
@@ -121,16 +121,12 @@ class PageFile(SourceFile):
             return [SitePage(self, self.data, collections)]
 
 
-class HTMLFile(PageFile):
-    suffix = ".html"
-
-
 class MarkdownFile(PageFile):
-    suffix = ".md"
+    suffixes = {".md"}
 
 
 class Jinja2File(PageFile):
-    suffix = ".j2"
+    suffixes = {".html", ".j2"}
 
 
 class DataFile(SourceFile):
@@ -139,7 +135,7 @@ class DataFile(SourceFile):
 
 
 class JSONFile(DataFile):
-    suffix = ".json"
+    suffixes = {".json"}
 
     def get_data(self) -> Union[list, dict]:
         with open(self.path) as infile:
@@ -147,7 +143,7 @@ class JSONFile(DataFile):
 
 
 class PythonFile(DataFile):
-    suffix = ".py"
+    suffixes = {".py"}
 
     def get_data(self) -> Any:
         parent_path = str(self.path.parent)
@@ -178,7 +174,7 @@ class DataFileFactory:
 
 
 class PageFileFactory:
-    suffix_to_class_map = {".html": HTMLFile, ".md": MarkdownFile, ".j2": Jinja2File}
+    suffix_to_class_map = {".html": Jinja2File, ".md": MarkdownFile, ".j2": Jinja2File}
 
     def is_valid_file(self, path: Path) -> bool:
         return path.suffix in self.suffix_to_class_map
