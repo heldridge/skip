@@ -70,6 +70,9 @@ class SourceFile:
             raise InvalidFileExtensionException(path.suffix)
         self.path = path
 
+    def __str__(self):
+        return str(self.path)
+
 
 class PageFile(SourceFile):
     def __init__(self, path: Path, data: dict) -> None:
@@ -159,7 +162,9 @@ class DataFileFactory:
     suffix_to_class_map = {".json": JSONFile, ".py": PythonFile}
 
     def is_valid_file(self, path: Path) -> bool:
-        return path.suffix in self.suffix_to_class_map
+        return path.suffix in self.suffix_to_class_map and (
+            path.suffix != ".py" or path.parent.name != ""
+        )
 
     def load_source_file(self, path: Path) -> DataFile:
         suffix = path.suffix
@@ -167,7 +172,6 @@ class DataFileFactory:
             raise InvalidFileExtensionException(
                 f"No DataFile type found with suffix {suffix}"
             )
-
         return self.suffix_to_class_map[suffix](path)
 
 
