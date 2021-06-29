@@ -1,5 +1,7 @@
+import json
 from pathlib import Path
-from typing import Generator
+import sys
+from typing import Any, Generator, Union
 
 import frontmatter
 import jinja2
@@ -125,8 +127,41 @@ class Jinja2File(PageFile):
     suffix = ".j2"
 
 
+class DataFile(SourceFile):
+    def get_data(self):
+        return None
+
+
+class JSONFile(DataFile):
+    suffix = ".json"
+
+    def get_data(self) -> Union[list, dict]:
+        with open(self.path) as infile:
+            return json.load(infile)
+
+
+class PythonFile(DataFile):
+    suffix = ".py"
+
+    def get_data(self) -> Any:
+        parent_path = str(self.path.parent)
+        if self.path.parent.name != "":
+            sys.path.append(parent_path)
+            module = __import__(self.path.stem)
+            data = module.get_data()
+            sys.path.remove(parent_path)
+
+            return data
+
+
 class SourceFileFactory:
-    suffix_to_class_map = {".html": HTMLFile, ".md": MarkdownFile, ".j2": Jinja2File}
+    suffix_to_class_map = {
+        ".html": HTMLFile,
+        ".md": MarkdownFile,
+        ".j2": Jinja2File,
+        ".json": JSONFile,
+        ".py": PythonFile,
+    }
 
     def load_source_file(self, path: Path) -> SourceFile:
         suffix = path.suffix
