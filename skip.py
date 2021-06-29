@@ -97,7 +97,7 @@ class DataFile(SourceFile):
 
 
 class SitePage:
-    def __init__(self, source: SourceFile, data: dict) -> None:
+    def __init__(self, source: PageFile, data: dict) -> None:
         self.source = source
         self.data = data
 
