@@ -1,3 +1,4 @@
+import collections
 import json
 import markdown
 from pathlib import Path
@@ -26,8 +27,20 @@ class SitePage:
         self.data = data
         self.collections = collections
 
+    def render_layout(self, jinja2_env: jinja2.Environment) -> str:
+        html = self.source.get_html()
+        if "layout" in self.data:
+            template = jinja2_env.get_template(self.data["layout"])
+            return template.render(
+                content=html,
+                data=self.data,
+                collections=self.collections,
+            )
+        else:
+            return html
+
     def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.source.get_html())
+        template = jinja2_env.from_string(self.render_layout(jinja2_env))
         return template.render(data=self.data, collections=self.collections)
 
     def get_permalink(self):
@@ -49,7 +62,7 @@ class PaginationSitePage(SitePage):
         self.items = items
 
     def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.source.get_html())
+        template = jinja2_env.from_string(self.render_layout(jinja2_env))
         return template.render(
             data=self.data, collections=self.collections, items=self.items
         )

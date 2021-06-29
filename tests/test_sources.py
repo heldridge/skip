@@ -1,6 +1,8 @@
 from pathlib import Path
 import unittest
 
+import jinja2
+
 from sources import (
     DataFileFactory,
     InvalidFileExtensionException,
@@ -70,3 +72,14 @@ class TestGetPages(unittest.TestCase):
         pages = j2_file.get_pages({})
         self.assertEqual(len(pages), 3)
         self.assertEqual(pages[1].items, ["c", "d"])
+
+
+class TestRender(unittest.TestCase):
+    def test_renders_with_layout(self):
+        md_file = MarkdownFile(Path("tests/files/layout.md"), {})
+        pages = md_file.get_pages({})
+        jinja2_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader("tests/files/templates")
+        )
+        html = pages[0].render(jinja2_env)
+        self.assertTrue("<main>" in html)
