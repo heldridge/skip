@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import frontmatter
+
 
 class SitePage:
     pass
@@ -9,17 +11,36 @@ class InvalidFileExtensionException(Exception):
     pass
 
 
+class InvalidTagsException(Exception):
+    pass
+
+
 class SourceFile:
     suffix: str
 
-    def __init__(self, path) -> None:
+    def __init__(self, path: Path) -> None:
         if path.suffix != self.suffix:
             raise InvalidFileExtensionException(path.suffix)
-
         self.path = path
 
 
 class PageFile(SourceFile):
+    def __init__(self, path: Path) -> None:
+        super().__init__(path)
+
+        post = frontmatter.load(self.path)
+        if "tags" in post:
+            if isinstance(post["tags"], str):
+                self.tags: set[str] = set()
+                self.tags.add(post["tags"])
+            elif isinstance(post["tags"], list):
+                self.tags = set(post["tags"])
+            else:
+                raise InvalidTagsException(
+                    f"Invalid tags for file at {self.path}. Expected <str> or <list>, "
+                    f"got {type(post['tags'])}"
+                )
+
     def get_pages(self) -> list[SitePage]:
         pass
 
