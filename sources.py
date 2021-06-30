@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import collections
 import json
 import markdown
 from pathlib import Path
