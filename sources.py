@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import collections
 import json
 import markdown
@@ -87,7 +88,7 @@ class MissingPaginationSourceException(Exception):
     pass
 
 
-class SourceFile:
+class SourceFile(ABC):
     suffixes: set
 
     def __init__(self, path: Path) -> None:
@@ -160,9 +161,10 @@ class Jinja2File(PageFile):
     suffixes = {".html", ".j2"}
 
 
-class DataFile(SourceFile):
+class DataFile(SourceFile, ABC):
+    @abstractmethod
     def get_data(self):
-        return None
+        return
 
 
 class JSONFile(DataFile):
