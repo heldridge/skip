@@ -7,9 +7,11 @@ import jinja2
 from sources import (
     DataFileFactory,
     InvalidFileExtensionException,
+    InvalidTagsException,
     JSONFile,
     Jinja2File,
     MarkdownFile,
+    MissingPaginationSourceException,
     PageFileFactory,
     PaginationSitePage,
     PythonFile,
@@ -58,6 +60,22 @@ class TestPageFile(unittest.TestCase):
         page_file = MarkdownFile(path, {})
         self.assertEqual(page_file.tags, {"a"})
 
+    def test_bad_tags(self):
+        path = Path("tests/files/layout.md")
+        with self.assertRaises(InvalidTagsException):
+            MarkdownFile(path, {"tags": {"a": 1, "b": 1}})
+
+    def test_rejects_bad_suffix(self):
+        path = Path("a/b/c/file.doc")
+        with self.assertRaises(InvalidFileExtensionException) as context:
+            Jinja2File(path, {})
+            self.assertTrue(".doc" in str(context.exception))
+
+    def test_str(self):
+        path = Path("tests/files/tags.html")
+        page_file = Jinja2File(path, {})
+        self.assertEqual(str(page_file), str(path))
+
 
 class TestGetPages(unittest.TestCase):
     def test_returns_single_page(self):
@@ -77,6 +95,12 @@ class TestGetPages(unittest.TestCase):
         pages = j2_file.get_pages({})
         self.assertEqual(len(pages), 3)
         self.assertEqual(pages[1].items, ["c", "d"])
+
+    def test_errors_on_missing_page_source(self):
+        j2_file = Jinja2File(Path("tests/files/pagination.j2"), {})
+
+        with self.assertRaises(MissingPaginationSourceException):
+            j2_file.get_pages({"b": ["dummy1", "dummy2"]})
 
 
 class TestRender(unittest.TestCase):
