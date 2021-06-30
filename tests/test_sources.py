@@ -7,10 +7,12 @@ import jinja2
 from sources import (
     DataFileFactory,
     InvalidFileExtensionException,
+    JSONFile,
     Jinja2File,
     MarkdownFile,
     PageFileFactory,
     PaginationSitePage,
+    PythonFile,
     SitePage,
 )
 
@@ -130,3 +132,13 @@ class TestGetPermalink(unittest.TestCase):
         self.assertEqual(
             pagination_page.get_permalink(), Path("a/b/c/pagefile/2/index.html")
         )
+
+
+class TestGetData(unittest.TestCase):
+    def test_json_file(self):
+        json_file = JSONFile(Path("tests/files/my-data.json"))
+        self.assertEqual(json_file.get_data(), {"a": 1})
+
+    def test_python_file(self):
+        python_file = PythonFile(Path("tests/files/my-data.py"))
+        self.assertEqual(python_file.get_data(), ["a", "b", "c"])
