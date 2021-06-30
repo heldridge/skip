@@ -10,3 +10,5 @@ testo/
 .skipignore
 settings.py
 .vscode/
+.coverage
+htmlcov/
