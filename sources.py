@@ -120,7 +120,7 @@ class PageFile(SourceFile):
                     f"got {type(self.data['tags'])}"
                 )
         else:
-            self.tags = []
+            self.tags = set()
 
     def get_pages(self, collections: dict[str, list["PageFile"]]) -> list[SitePage]:
         if "pagination" in self.data:
@@ -134,7 +134,7 @@ class PageFile(SourceFile):
             else:
                 raise MissingPaginationSourceException(pagination_source)
 
-            pages = []
+            pages: list[SitePage] = []
             for index, items in enumerate(
                 chunks(pagination_data, self.data["pagination"]["size"])
             ):
@@ -211,7 +211,7 @@ class PageFileFactory:
     def is_valid_file(self, path: Path) -> bool:
         return path.suffix in self.suffix_to_class_map
 
-    def load_source_file(self, path: Path, data: dict) -> DataFile:
+    def load_source_file(self, path: Path, data: dict) -> PageFile:
         suffix = path.suffix
         if not self.is_valid_file(path):
             raise InvalidFileExtensionException(
