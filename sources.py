@@ -43,7 +43,7 @@ class SitePage:
         template = jinja2_env.from_string(self.render_layout(jinja2_env))
         return template.render(data=self.data, collections=self.collections)
 
-    def get_permalink(self):
+    def get_permalink(self) -> Path:
         path = self.source.path
         return path.parent / path.stem / "index.html"
 
@@ -67,7 +67,7 @@ class PaginationSitePage(SitePage):
             data=self.data, collections=self.collections, items=self.items
         )
 
-    def get_permalink(self):
+    def get_permalink(self) -> Path:
         if self.index == 0:
             return super().get_permalink()
         else:
