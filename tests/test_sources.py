@@ -1,5 +1,6 @@
 from pathlib import Path
 import unittest
+from unittest.mock import Mock
 
 import jinja2
 
@@ -9,6 +10,8 @@ from sources import (
     Jinja2File,
     MarkdownFile,
     PageFileFactory,
+    PaginationSitePage,
+    SitePage,
 )
 
 
@@ -75,11 +78,55 @@ class TestGetPages(unittest.TestCase):
 
 
 class TestRender(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.jinja2_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader("tests/files/templates")
+        )
+        return super().setUpClass()
+
+    def test_renders_html(self):
+        j2_file = Jinja2File(Path("tests/files/tags.html"), {})
+        pages = j2_file.get_pages({})
+        html = pages[0].render(self.jinja2_env)
+        self.assertEqual("<h1>Hello</h1>", html)
+
     def test_renders_with_layout(self):
         md_file = MarkdownFile(Path("tests/files/layout.md"), {})
         pages = md_file.get_pages({})
-        jinja2_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader("tests/files/templates")
-        )
-        html = pages[0].render(jinja2_env)
+        html = pages[0].render(self.jinja2_env)
         self.assertTrue("<main>" in html)
+
+    def test_renders_with_pagination_items(self):
+        j2_file = Jinja2File(Path("tests/files/pagination2.j2"), {})
+        pages = j2_file.get_pages({})
+        html = pages[0].render(self.jinja2_env)
+        self.assertTrue("<p>a</p>" in html)
+        self.assertTrue("<p>b</p>" in html)
+
+
+class TestGetPermalink(unittest.TestCase):
+    def test_regular_permalink(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("a/b/c/pagefile.html")
+        site_page = SitePage(mock_pagefile, {}, {})
+
+        self.assertEqual(site_page.get_permalink(), Path("a/b/c/pagefile/index.html"))
+
+    def test_pagination_permalink_index_0(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("a/b/c/pagefile.html")
+        pagination_page = PaginationSitePage(mock_pagefile, {}, {}, 0, [])
+
+        self.assertEqual(
+            pagination_page.get_permalink(), Path("a/b/c/pagefile/index.html")
+        )
+
+    def test_pagination_permalink(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("a/b/c/pagefile.html")
+        pagination_page = PaginationSitePage(mock_pagefile, {}, {}, 2, [])
+
+        self.assertEqual(
+            pagination_page.get_permalink(), Path("a/b/c/pagefile/2/index.html")
+        )
