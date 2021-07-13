@@ -38,9 +38,12 @@ def process_datafiles() -> dict:
     return data_map
 
 
-def write_page(site_dir: Path, permalink: Path, filepath: Path, html: str) -> None:
+def write_page(
+    site_dir: Path, permalink: Path, filepath: Path, html: str, quiet: bool = False
+) -> None:
     full_path = site_dir / permalink
-    print("Writing", full_path, "from", filepath)
+    if not quiet:
+        print("Writing", full_path, "from", filepath)
     os.makedirs(full_path.parent, exist_ok=True)
     with open(full_path, "w+") as outfile:
         outfile.write(html)
