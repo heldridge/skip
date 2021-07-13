@@ -2,3 +2,6 @@
 omit = 
     */site-packages/*
     tests/*
+    server.py
+    watchers.py
+    settings.py
