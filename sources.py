@@ -162,7 +162,7 @@ class Jinja2File(PageFile):
 
 class DataFile(SourceFile, ABC):
     @abstractmethod
-    def get_data(self):
+    def get_data(self):  # pragma: no cover
         return
 
 
