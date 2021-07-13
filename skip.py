@@ -29,6 +29,10 @@ except ImportError:
     USE_SETTINGS = False
 
 
+class NonDictDataFileException(Exception):
+    pass
+
+
 def process_datafiles() -> dict:
     data_map = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
@@ -74,6 +78,12 @@ def get_page_files(
                 data_files.append(dff.load_source_file(path))
 
     for data_file in data_files:
+        file_data = data_file.get_data()
+
+        if not isinstance(file_data, dict):
+            raise NonDictDataFileException(
+                "Non-global data files must return dictionaries"
+            )
         data = {**data, **data_file.get_data()}
 
     for page_path in page_paths:
