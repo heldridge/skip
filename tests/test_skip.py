@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from sources import PageFileFactory
 import tempfile
 import time
 import unittest
