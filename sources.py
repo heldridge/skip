@@ -125,6 +125,9 @@ class PageFile(SourceFile):
         else:
             self.tags = set()
 
+        if "date" in self.data:
+            self.date = arrow.get(self.data["date"])
+
     def get_pages(self, collections: dict[str, list["PageFile"]]) -> list[SitePage]:
         if "pagination" in self.data:
 

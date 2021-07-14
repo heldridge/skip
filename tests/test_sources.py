@@ -2,6 +2,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import Mock
 
+import arrow
 import jinja2
 
 from sources import (
@@ -75,6 +76,11 @@ class TestPageFile(unittest.TestCase):
         path = Path("tests/files/tags.html")
         page_file = Jinja2File(path, {})
         self.assertEqual(str(page_file), str(path))
+
+    def test_overrides_date(self):
+        path = Path("tests/files/date.md")
+        md = MarkdownFile(path, {})
+        self.assertEqual(md.date, arrow.get("2021-01-01"))
 
 
 class TestGetPages(unittest.TestCase):
