@@ -1,7 +1,7 @@
+import datetime
 import json
 from pathlib import Path
 import tempfile
-import time
 import unittest
 
 import skip
@@ -71,19 +71,20 @@ class TestGetCollections(unittest.TestCase):
             self.assertTrue("all" in collections)
             self.assertTrue(len(collections["all"]) == 2)
 
-    def test_sorts_by_modified_date(self):
+    def test_sorts_by_date(self):
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
             with open(td / "a.md", "w+") as outfile:
                 outfile.write("# A")
 
-            # Sleep a small amount to ensure they have different modified times
-            time.sleep(0.01)
             with open(td / "b.md", "w+") as outfile:
                 outfile.write("# B")
 
             pfA = MarkdownFile(td / "a.md", {})
             pfB = MarkdownFile(td / "b.md", {})
+
+            pfA.date = datetime.datetime(2021, 1, 1)
+            pfB.date = datetime.datetime(2021, 1, 2)
 
             collections = skip.get_collections([pfB, pfA])
 
