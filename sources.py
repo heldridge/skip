@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-import datetime
 import json
 import os
 from pathlib import Path
 import sys
 from typing import Any, Generator, Union
 
+import arrow
 import frontmatter
 import jinja2
 import markdown
@@ -96,7 +96,7 @@ class SourceFile(ABC):
         if path.suffix not in self.suffixes:
             raise InvalidFileExtensionException(path.suffix)
         self.path = path
-        self.date = datetime.datetime.utcfromtimestamp(os.path.getmtime(self.path))
+        self.date = arrow.get(os.path.getmtime(self.path))
 
     def __str__(self):
         return str(self.path)

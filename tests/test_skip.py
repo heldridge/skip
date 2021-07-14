@@ -1,8 +1,9 @@
-import datetime
 import json
 from pathlib import Path
 import tempfile
 import unittest
+
+import arrow
 
 import skip
 from sources import MarkdownFile
@@ -83,8 +84,8 @@ class TestGetCollections(unittest.TestCase):
             pfA = MarkdownFile(td / "a.md", {})
             pfB = MarkdownFile(td / "b.md", {})
 
-            pfA.date = datetime.datetime(2021, 1, 1)
-            pfB.date = datetime.datetime(2021, 1, 2)
+            pfA.date = arrow.get("2021-01-01")
+            pfB.date = arrow.get("2021-01-02")
 
             collections = skip.get_collections([pfB, pfA])
 
