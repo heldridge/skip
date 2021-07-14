@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
+import datetime
 import json
-import markdown
+import os
 from pathlib import Path
 import sys
 from typing import Any, Generator, Union
 
 import frontmatter
 import jinja2
+import markdown
 
 
 def chunks(lst: list, n: int) -> Generator[list, None, None]:
@@ -94,6 +96,7 @@ class SourceFile(ABC):
         if path.suffix not in self.suffixes:
             raise InvalidFileExtensionException(path.suffix)
         self.path = path
+        self.date = datetime.datetime.utcfromtimestamp(os.path.getmtime(self.path))
 
     def __str__(self):
         return str(self.path)

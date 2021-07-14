@@ -103,6 +103,9 @@ def get_collections(pages: List[PageFile]) -> Mapping[str, List[PageFile]]:
         for tag in page.tags:
             collections[tag].append(page)
 
+    for collection in collections.values():
+        collection.sort(key=lambda item: item.date)
+
     return collections
 
 
