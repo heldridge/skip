@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from sources import PageFileFactory
 import tempfile
 import unittest
 
 import skip
+from sources import MarkdownFile
 
 
 class TestWritePage(unittest.TestCase):
@@ -50,3 +52,21 @@ class TestGetPageFiles(unittest.TestCase):
 
             with self.assertRaises(skip.NonDictDataFileException):
                 skip.get_page_files({}, lambda _: False, Path(td), {})
+
+
+class TestGetCollections(unittest.TestCase):
+    def test_creates_all_collection(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            with open(td / "a.md", "w+") as outfile:
+                outfile.write("# A")
+            with open(td / "b.md", "w+") as outfile:
+                outfile.write("# B")
+
+            pfA = MarkdownFile(td / "a.md", {})
+            pfB = MarkdownFile(td / "b.md", {})
+
+            collections = skip.get_collections([pfA, pfB])
+
+            self.assertTrue("all" in collections)
+            self.assertTrue(len(collections["all"]) == 2)

@@ -99,6 +99,7 @@ def get_page_files(
 def get_collections(pages: List[PageFile]) -> Mapping[str, List[PageFile]]:
     collections = defaultdict(list)
     for page in pages:
+        collections["all"].append(page)
         for tag in page.tags:
             collections[tag].append(page)
 
