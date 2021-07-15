@@ -209,7 +209,7 @@ def main():
     if args.watch or args.serve:
         print("\nWatching files for changes...")
 
-        if should_ignore is not None:
+        if should_ignore is not false:
             for changes in watchgod.watch(
                 ".",
                 watcher_cls=watchers.SkipIgnoreWatcher,
