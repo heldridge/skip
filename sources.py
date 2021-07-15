@@ -46,6 +46,15 @@ class SitePage:
         return template.render(data=self.data, collections=self.collections)
 
     def get_permalink(self) -> Path:
+        if "permalink" in self.data:
+            path = self.data["permalink"]
+            if path.endswith("/"):
+                # Filename is not specified, so append 'index.html'
+                return Path(path) / "index.html"
+            else:
+                # Assume the last part of the path is the filename
+                return Path(path)
+
         path = self.source.path
         return path.parent / path.stem / "index.html"
 

@@ -163,6 +163,20 @@ class TestGetPermalink(unittest.TestCase):
             pagination_page.get_permalink(), Path("a/b/c/pagefile/2/index.html")
         )
 
+    def test_permalink_from_data(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("a/b/c/pagefile.html")
+        site_page = SitePage(mock_pagefile, {"permalink": "x/y/z/index.html"}, {})
+
+        self.assertEqual(site_page.get_permalink(), Path("x/y/z/index.html"))
+
+    def test_appends_index_html(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("a/b/c/pagefile.html")
+        site_page = SitePage(mock_pagefile, {"permalink": "x/y/z/"}, {})
+
+        self.assertEqual(site_page.get_permalink(), Path("x/y/z/index.html"))
+
 
 class TestGetData(unittest.TestCase):
     def test_json_file(self):
