@@ -151,7 +151,7 @@ def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
             else:
                 raise e
 
-    print("Build Complete!")
+    print("Build Complete!\n")
 
 
 def main():
