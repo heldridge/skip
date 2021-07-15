@@ -45,18 +45,19 @@ class SitePage:
         template = jinja2_env.from_string(self.render_layout(jinja2_env))
         return template.render(data=self.data, collections=self.collections)
 
-    def get_permalink(self) -> Path:
+    def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
         if "permalink" in self.data:
-            path = self.data["permalink"]
-            if path.endswith("/"):
+            permalink_template = jinja2_env.from_string(self.data["permalink"])
+            permalink = permalink_template.render(data=self.data)
+            if permalink.endswith("/"):
                 # Filename is not specified, so append 'index.html'
-                return Path(path) / "index.html"
+                return Path(permalink) / "index.html"
             else:
                 # Assume the last part of the path is the filename
-                return Path(path)
-
-        path = self.source.path
-        return path.parent / path.stem / "index.html"
+                return Path(permalink)
+        else:
+            path = self.source.path
+            return path.parent / path.stem / "index.html"
 
 
 class PaginationSitePage(SitePage):
@@ -78,12 +79,24 @@ class PaginationSitePage(SitePage):
             data=self.data, collections=self.collections, items=self.items
         )
 
-    def get_permalink(self) -> Path:
+    def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
         if self.index == 0:
-            return super().get_permalink()
+            return super().get_permalink(jinja2_env)
         else:
-            path = self.source.path
-            return path.parent / path.stem / str(self.index) / "index.html"
+            if "permalink" in self.data:
+                permalink_template = jinja2_env.from_string(self.data["permalink"])
+                permalink = permalink_template.render(
+                    data=self.data, index=self.index, items=self.items
+                )
+                if permalink.endswith("/"):
+                    # Filename is not specified, so append 'index.html'
+                    return Path(permalink) / "index.html"
+                else:
+                    # Assume the last part of the path is the filename
+                    return Path(permalink)
+            else:
+                path = self.source.path
+                return path.parent / path.stem / str(self.index) / "index.html"
 
 
 class InvalidFileExtensionException(Exception):
