@@ -186,7 +186,7 @@ class MarkdownFile(PageFile):
     suffixes = {".md"}
 
     def get_html(self):
-        return markdown.markdown(self.content)
+        return markdown.markdown(self.content, extensions=["codehilite", "fenced_code"])
 
 
 class Jinja2File(PageFile):
