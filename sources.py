@@ -57,7 +57,12 @@ class SitePage:
                 return Path(permalink)
         else:
             path = self.source.path
-            return path.parent / path.stem / "index.html"
+            if len(path.parts) == 1 and path.stem == "index":
+                # Anything just named "index" in the top level dir becomes the
+                # index page
+                return Path("index.html")
+            else:
+                return path.parent / path.stem / "index.html"
 
 
 class PaginationSitePage(SitePage):

@@ -172,6 +172,13 @@ class TestGetPermalink(unittest.TestCase):
             Path("a/b/c/pagefile/2/index.html"),
         )
 
+    def test_index_does_not_go_to_subfolder(self):
+        mock_pagefile = Mock()
+        mock_pagefile.path = Path("index.md")
+        site_page = SitePage(mock_pagefile, {}, {})
+
+        self.assertEqual(site_page.get_permalink(self.jinja2_env), Path("index.html"))
+
     def test_permalink_from_data(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
