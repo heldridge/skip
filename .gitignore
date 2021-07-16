@@ -5,7 +5,9 @@ data/
 _site/
 sandbox/
 templates/
+!docs/templates/
 css/
+!docs/css/
 testo/
 .skipignore
 settings.py
