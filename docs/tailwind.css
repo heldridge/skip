@@ -8,15 +8,15 @@
 }
 
 .prose h1 {
-    @apply text-6xl mb-2
+    @apply text-5xl md:text-6xl mb-2
 }
 
 .prose h2 {
-    @apply text-3xl mt-5 mb-2
+    @apply text-2xl md:text-3xl mt-5 mb-2
 }
 
 .prose p, .prose ul {
-    @apply text-lg
+    @apply md:text-lg
 }
 
 .prose a {
@@ -28,5 +28,5 @@
 }
 
 .prose .codehilite {
-    @apply p-2 rounded shadow
+    @apply p-2 rounded shadow overflow-auto
 }
