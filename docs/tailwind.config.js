@@ -1,7 +1,7 @@
 module.exports = {
   purge: ["./**/*.j2"],
   mode: 'jit',
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'media',
   theme: {
     extend: {
       spacing: {
