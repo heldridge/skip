@@ -14,3 +14,4 @@ settings.py
 .vscode/
 .coverage
 htmlcov/
+node_modules/
