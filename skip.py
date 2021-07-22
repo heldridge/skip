@@ -191,7 +191,7 @@ def main():
     # Default config
     config = {"output": "_site", "copy": []}
 
-    if settings:
+    if USE_SETTINGS:
         config = {**config, **vars(settings).get("OPTIONS", {})}
 
     # CLI flags take precedence over settings file
