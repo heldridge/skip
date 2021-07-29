@@ -18,3 +18,5 @@ pip install skip-ssg
 echo '# Hello World' > index.md
 skip
 ```
+
+Ready for more? Head over to [Getting Started](/getting-started)
