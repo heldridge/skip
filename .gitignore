@@ -2,6 +2,7 @@
 data/
 *.md
 !README.md
+!docs/*.md
 _site/
 sandbox/
 templates/
