@@ -28,5 +28,5 @@
 }
 
 .prose .codehilite {
-    @apply p-2 rounded shadow overflow-auto
+    @apply p-2 rounded shadow overflow-auto mt-2 mb-2
 }
