@@ -28,9 +28,10 @@ class SitePage:
         self.source = source
         self.data = data
         self.collections = collections
+        self.template_data = {"data": self.data, "collections": self.collections}
 
-    def render_layout(self, jinja2_env: jinja2.Environment) -> str:
-        html = self.source.get_html()
+    def render(self, jinja2_env: jinja2.Environment) -> str:
+        html = self.source.get_html(jinja2_env, **self.template_data)
         if "layout" in self.data:
             template = jinja2_env.get_template(self.data["layout"])
             return template.render(
@@ -40,10 +41,6 @@ class SitePage:
             )
         else:
             return html
-
-    def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.render_layout(jinja2_env))
-        return template.render(data=self.data, collections=self.collections)
 
     def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
         if "permalink" in self.data:
@@ -77,12 +74,7 @@ class PaginationSitePage(SitePage):
         super().__init__(source, data, collections)
         self.index = index
         self.items = items
-
-    def render(self, jinja2_env: jinja2.Environment) -> str:
-        template = jinja2_env.from_string(self.render_layout(jinja2_env))
-        return template.render(
-            data=self.data, collections=self.collections, items=self.items
-        )
+        self.template_data = {**self.template_data, "items": self.items}
 
     def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
         if self.index == 0:
@@ -178,18 +170,22 @@ class PageFile(SourceFile):
         else:
             return [SitePage(self, self.data, collections)]
 
-    def get_html(self):
+    def get_html(self, jinja2_env, **kwargs):
         return self.content
 
 
 class MarkdownFile(PageFile):
     suffixes = {".md"}
 
-    def get_html(self):
+    def get_html(self, _, **kwargs):
         return markdown.markdown(self.content, extensions=["codehilite", "fenced_code"])
 
 
 class Jinja2File(PageFile):
+    def get_html(self, jinja2_env, **kwargs):
+        template = jinja2_env.from_string(self.content)
+        return template.render(**kwargs)
+
     suffixes = {".html", ".j2"}
 
 
