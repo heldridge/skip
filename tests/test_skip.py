@@ -22,7 +22,11 @@ class TestWritePage(unittest.TestCase):
 class TestGetPageFiles(unittest.TestCase):
     def test_loads_right_data(self):
         page_files = skip.get_page_files(
-            {}, lambda _: False, Path("tests/files/demo_site/"), {"global": "global"}
+            {},
+            lambda _: False,
+            Path("tests/files/demo_site/"),
+            {"global": "global"},
+            True,
         )
 
         for pf in page_files:
@@ -52,7 +56,7 @@ class TestGetPageFiles(unittest.TestCase):
                 json.dump(["list"], outfile)
 
             with self.assertRaises(skip.NonDictDataFileException):
-                skip.get_page_files({}, lambda _: False, Path(td), {})
+                skip.get_page_files({}, lambda _: False, Path(td), {}, True)
 
 
 class TestGetCollections(unittest.TestCase):
