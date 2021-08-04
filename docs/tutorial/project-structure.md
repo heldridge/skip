@@ -1,7 +1,3 @@
----
-layout: base.j2
----
-
 # Project Structure
 
 Skip builds your site according to your folder hierarchy.

@@ -1,7 +1,3 @@
----
-layout: base.j2
----
-
 # Getting Started
 
 First, make a project directory and cd into it.
