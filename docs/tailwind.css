@@ -30,3 +30,7 @@
 .prose .codehilite {
     @apply p-2 rounded shadow overflow-auto mt-2 mb-2
 }
+
+.prose > p > code {
+    @apply bg-pygmentLight dark:bg-pygmentDark dark:text-pygmentTextLight py-0.5 px-1 rounded
+}

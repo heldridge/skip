@@ -8,6 +8,15 @@ module.exports = {
         '188': '47rem'
       }
     },
+    backgroundColor: theme => ({
+      ...theme('colors'),
+      'pygmentLight': '#f8f8f8',
+      'pygmentDark': '#272822'
+    }),
+    textColor: theme => ({
+      ...theme('colors'),
+      'pygmentTextLight': '#f8f8f2'
+    })
   },
   variants: {
     extend: {},
