@@ -54,7 +54,11 @@ def write_page(
 
 
 def get_page_files(
-    ignores: set[str], should_ignore: Callable[[str], bool], path: Path, data: dict
+    ignores: set[str],
+    should_ignore: Callable[[str], bool],
+    path: Path,
+    data: dict,
+    fail_on_error: bool,
 ) -> List[PageFile]:
     page_paths = []
     page_files: List[PageFile] = []
@@ -78,7 +82,15 @@ def get_page_files(
                 data_files.append(dff.load_source_file(path))
 
     for data_file in data_files:
-        file_data = data_file.get_data()
+
+        try:
+            file_data = data_file.get_data()
+        except Exception as e:
+            if not fail_on_error:
+                print(f'Failed to load data from {data_file.path}: "{e}", skipping...')
+                continue
+            else:
+                raise e
 
         if not isinstance(file_data, dict):
             raise NonDictDataFileException(
@@ -91,7 +103,9 @@ def get_page_files(
 
     # Recurse
     for dir_path in dirs:
-        page_files += get_page_files(ignores, should_ignore, dir_path, data)
+        page_files += get_page_files(
+            ignores, should_ignore, dir_path, data, fail_on_error
+        )
 
     return page_files
 
@@ -124,7 +138,9 @@ def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
     site_dir = Path(config["output"])
 
     ignore_dirs = {".git", "data", config["output"], "templates", "__pycache__"}
-    page_files = get_page_files(ignore_dirs, should_ignore, Path("."), data)
+    page_files = get_page_files(
+        ignore_dirs, should_ignore, Path("."), data, config["fail_on_error"]
+    )
     collections = get_collections(page_files)
 
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
@@ -178,6 +194,15 @@ def main():
         ),
         nargs="+",
     )
+    parser.add_argument(
+        "-f",
+        "--fail-on-error",
+        help=(
+            "Terminate with an error when a data file fails to load rather than "
+            "skipping it"
+        ),
+        action="store_true",
+    )
     args = parser.parse_args()
 
     skipignore_path = Path(".skipignore")
@@ -196,7 +221,7 @@ def main():
 
     # CLI flags take precedence over settings file
     dict_args = vars(args)
-    arg_config_options = ["output", "port", "copy"]
+    arg_config_options = ["output", "port", "copy", "fail_on_error"]
     for option in arg_config_options:
         if dict_args[option] is not None:
             config[option] = dict_args[option]
