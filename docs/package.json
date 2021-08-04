@@ -4,7 +4,8 @@
   "description": "Documentation for Skip",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tailwind": "TAILWIND_MODE=watch postcss tailwind.css -o ./css/tailwind.css --verbose -w"
   },
   "author": "Harry",
   "license": "MIT",
