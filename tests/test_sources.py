@@ -20,7 +20,7 @@ from sources import (
 )
 
 
-class TestSourceFileFactory(unittest.TestCase):
+class TestSourceFileFactories(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.pff = PageFileFactory()
