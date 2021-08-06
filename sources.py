@@ -42,8 +42,11 @@ class SitePage:
         else:
             return html
 
-    def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
+    def get_permalink(self) -> Path:
         if "permalink" in self.data:
+
+            jinja2_env = jinja2.Environment()
+
             permalink_template = jinja2_env.from_string(self.data["permalink"])
             permalink = permalink_template.render(data=self.data)
             if permalink.endswith("/"):
@@ -76,11 +79,12 @@ class PaginationSitePage(SitePage):
         self.items = items
         self.template_data = {**self.template_data, "items": self.items}
 
-    def get_permalink(self, jinja2_env: jinja2.Environment) -> Path:
+    def get_permalink(self) -> Path:
         if self.index == 0:
-            return super().get_permalink(jinja2_env)
+            return super().get_permalink()
         else:
             if "permalink" in self.data:
+                jinja2_env = jinja2.Environment()
                 permalink_template = jinja2_env.from_string(self.data["permalink"])
                 permalink = permalink_template.render(
                     data=self.data, index=self.index, items=self.items
@@ -119,6 +123,10 @@ class SourceFile(ABC):
 
     def __str__(self):
         return str(self.path)
+
+
+class NoPermalinkException(Exception):
+    pass
 
 
 class PageFile(SourceFile):
@@ -169,6 +177,14 @@ class PageFile(SourceFile):
             return pages
         else:
             return [SitePage(self, self.data, collections)]
+
+    def get_permalink(self):
+        if "pagination" in self.data:
+            raise NoPermalinkException(
+                "Cannot get a permalink from a PageFile with pagination"
+            )
+
+        return SitePage(self, self.data, []).get_permalink()
 
     def get_html(self, jinja2_env, **kwargs):
         return self.content
