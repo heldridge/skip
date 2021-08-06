@@ -42,7 +42,7 @@ class SitePage:
         else:
             return html
 
-    def get_permalink(self) -> Path:
+    def get_path(self) -> Path:
         if "permalink" in self.data:
 
             jinja2_env = jinja2.Environment()
@@ -64,6 +64,16 @@ class SitePage:
             else:
                 return path.parent / path.stem / "index.html"
 
+    def get_permalink(self) -> str:
+        permalink = str(self.get_path())
+
+        if not permalink.startswith("/"):
+            permalink = "/" + permalink
+
+        if permalink.endswith("index.html"):
+            permalink = permalink[: -1 * len("index.html")]
+        return permalink
+
 
 class PaginationSitePage(SitePage):
     def __init__(
@@ -79,9 +89,9 @@ class PaginationSitePage(SitePage):
         self.items = items
         self.template_data = {**self.template_data, "items": self.items}
 
-    def get_permalink(self) -> Path:
+    def get_path(self) -> Path:
         if self.index == 0:
-            return super().get_permalink()
+            return super().get_path()
         else:
             if "permalink" in self.data:
                 jinja2_env = jinja2.Environment()

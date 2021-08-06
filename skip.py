@@ -148,7 +148,7 @@ def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
         pages = page_file.get_pages(collections)
         for page in pages:
             html = page.render(jinja_env)
-            write_page(site_dir, page.get_permalink(), page.source.path, html)
+            write_page(site_dir, page.get_path(), page.source.path, html)
 
     for copy_target in config["copy"]:
         if ":" in copy_target:

@@ -86,7 +86,17 @@ class TestPageFile(unittest.TestCase):
     def test_gets_permalink(self):
         path = Path("tests/files/tags.html")
         page_file = Jinja2File(path, {})
-        self.assertEqual(page_file.get_permalink(), Path("tests/files/tags/index.html"))
+        self.assertEqual(page_file.get_permalink(), "/tests/files/tags/")
+
+    def test_gets_specified_permalink(self):
+        path = Path("tests/files/tags.html")
+        page_file = Jinja2File(path, {"permalink": "a/b/c/blah.html"})
+        self.assertEqual(page_file.get_permalink(), "/a/b/c/blah.html")
+
+    def test_permalink_does_not_add_second_slash(self):
+        path = Path("tests/files/tags.html")
+        page_file = Jinja2File(path, {"permalink": "/a/b/c/blah.html"})
+        self.assertEqual(page_file.get_permalink(), "/a/b/c/blah.html")
 
     def test_pagination_permalink_raises_error(self):
         path = Path("tests/files/pagination.j2")
@@ -149,35 +159,35 @@ class TestRender(unittest.TestCase):
         self.assertTrue("<p>b</p>" in html)
 
 
-class TestGetPermalink(unittest.TestCase):
+class TestGetpath(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         return super().setUpClass()
 
-    def test_regular_permalink(self):
+    def test_regular_path(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         site_page = SitePage(mock_pagefile, {}, {})
 
-        self.assertEqual(site_page.get_permalink(), Path("a/b/c/pagefile/index.html"))
+        self.assertEqual(site_page.get_path(), Path("a/b/c/pagefile/index.html"))
 
-    def test_pagination_permalink_index_0(self):
+    def test_pagination_path_index_0(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         pagination_page = PaginationSitePage(mock_pagefile, {}, {}, 0, [])
 
         self.assertEqual(
-            pagination_page.get_permalink(),
+            pagination_page.get_path(),
             Path("a/b/c/pagefile/index.html"),
         )
 
-    def test_pagination_permalink(self):
+    def test_pagination_path(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         pagination_page = PaginationSitePage(mock_pagefile, {}, {}, 2, [])
 
         self.assertEqual(
-            pagination_page.get_permalink(),
+            pagination_page.get_path(),
             Path("a/b/c/pagefile/2/index.html"),
         )
 
@@ -186,30 +196,30 @@ class TestGetPermalink(unittest.TestCase):
         mock_pagefile.path = Path("index.md")
         site_page = SitePage(mock_pagefile, {}, {})
 
-        self.assertEqual(site_page.get_permalink(), Path("index.html"))
+        self.assertEqual(site_page.get_path(), Path("index.html"))
 
-    def test_permalink_from_data(self):
+    def test_path_from_data(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         site_page = SitePage(mock_pagefile, {"permalink": "x/y/z/index.html"}, {})
 
-        self.assertEqual(site_page.get_permalink(), Path("x/y/z/index.html"))
+        self.assertEqual(site_page.get_path(), Path("x/y/z/index.html"))
 
     def test_appends_index_html(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         site_page = SitePage(mock_pagefile, {"permalink": "x/y/z/"}, {})
 
-        self.assertEqual(site_page.get_permalink(), Path("x/y/z/index.html"))
+        self.assertEqual(site_page.get_path(), Path("x/y/z/index.html"))
 
-    def test_renders_permalink_as_template(self):
+    def test_renders_path_as_template(self):
         mock_pagefile = Mock()
         mock_pagefile.path = Path("a/b/c/pagefile.html")
         site_page = SitePage(
             mock_pagefile, {"permalink": "x/{{data.middle}}/z/", "middle": "dummy"}, {}
         )
 
-        self.assertEqual(site_page.get_permalink(), Path("x/dummy/z/index.html"))
+        self.assertEqual(site_page.get_path(), Path("x/dummy/z/index.html"))
 
 
 class TestGetData(unittest.TestCase):
