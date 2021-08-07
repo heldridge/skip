@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/pygments.css">
     <link rel="stylesheet" href="/css/tailwind.css">
-    <title>Skip</title>
+    <link rel="stylesheet" href="/css/pygments.css">
+    <title>Document</title>
 </head>
-<body class="bg-white dark:bg-gray-800 dark:text-gray-300">
-    <main class="w-full  flex flex-col items-center mt-4 md:mt-20 mb-10 mx-1 md:mx-0">
-        <section class="prose w-full md:w-188">
-            {{ content }}
-        </section>
-    </main>
+<body>
+    <body class="bg-white dark:bg-gray-800 dark:text-gray-300">
+        {% block content %}{% endblock %}
+    </body>
 </body>
 </html>

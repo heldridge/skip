@@ -1,3 +1,7 @@
+---
+title: Project Structure
+date: "2021-01-02"
+---
 # Project Structure
 
 Skip builds your site according to your folder hierarchy.

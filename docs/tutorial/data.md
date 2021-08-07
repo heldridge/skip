@@ -1,3 +1,7 @@
+---
+title: Data
+date: "2021-01-03"
+---
 # Data
 
 In addition to Markdown, Skip can render [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/) template files.

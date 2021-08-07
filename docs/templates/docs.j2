@@ -1,0 +1,24 @@
+{% extends "base.j2" %}
+
+{% block content %}
+
+<div class="w-full justify-center flex mt-4 md:mt-20 mb-10">
+    <nav>
+        <ul>
+            {% for page in collections.tutorial %}
+            <li>
+                <a href="{{ page.get_permalink() }}"> {{ page.data.title }} </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+        
+    <main class="flex flex-col items-center  mx-1 md:mx-0">
+        <section class="prose w-full md:w-188">
+            {{ content }}
+        </section>
+    </main>
+
+</div>
+
+{% endblock %}

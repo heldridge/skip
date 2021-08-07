@@ -1,3 +1,7 @@
+---
+title: Getting Started
+date: "2021-01-01"
+---
 # Getting Started
 
 First, make a project directory and cd into it.

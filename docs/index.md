@@ -1,5 +1,5 @@
 ---
-layout: base.j2
+layout: index.j2
 ---
 # Skip
 
