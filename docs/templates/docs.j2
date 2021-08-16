@@ -2,9 +2,20 @@
 
 {% block content %}
 
-<div class="w-full justify-center lg:flex mt-4 md:mt-20 mb-10">
-    <nav class="mr-10 hidden lg:block">
+<div class="w-full lg:justify-center lg:flex-row flex-col flex mt-4 md:mt-20 mb-10">
 
+    <div class="flex justify-center mb-4">
+        <button 
+            id="menuButton" 
+            class="rounded border border-black dark:border-gray-100 shadow hover:shadow-lg px-2 py-1 lg:hidden w-40 text-xl dark:text-gray-100"
+            onClick="toggleMenu()"
+        >
+            Menu
+        </button>
+
+    </div>
+
+    <nav id="menu" class="lg:mr-10 mb-4 lg:block hidden">
         <ul>
             <li class="px-1">
                 <a href="/">
@@ -15,7 +26,6 @@
 
         <div class="w-full h-px bg-gray-300 mb-3 mx-1"></div>
 
-        
         <ul>
             <li class="px-1">
                 <a href="{{ collections.tutorial[0].get_permalink() }}">
@@ -49,5 +59,39 @@
     </main>
 
 </div>
+
+<script>
+
+menuActive = false;
+
+function toggleMenu() {
+
+    /*
+    Inactive: dark:text-gray-100 
+    Active: bg-black dark:bg-gray-100 text-gray-100 dark:text-black
+
+    */
+
+    let inactiveClasses = ["dark:text-gray-100"]
+    let activeClasses = ["bg-black", "dark:bg-gray-100", "text-gray-100", "dark:text-black"]
+
+
+    let menu = document.getElementById("menu");
+    let menuButton = document.getElementById("menuButton");
+
+    if (!menuActive) {
+        menu.classList.remove("hidden");
+        inactiveClasses.forEach(className => menuButton.classList.remove(className));
+        activeClasses.forEach(className => menuButton.classList.add(className));
+        menuActive = true;
+    } else {
+        menu.classList.add("hidden");
+        inactiveClasses.forEach(className => menuButton.classList.add(className));
+        activeClasses.forEach(className => menuButton.classList.remove(className));
+        menuActive = false;
+    }
+
+}
+</script>
 
 {% endblock %}

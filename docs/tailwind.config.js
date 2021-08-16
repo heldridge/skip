@@ -1,5 +1,9 @@
 module.exports = {
-  purge: ["./**/*.j2"],
+  purge: {
+    content: ["./**/*.j2"],
+    /* Safelist for menu-button toggling */
+    safelist: ["bg-black", "dark:bg-gray-100", "text-gray-100", "dark:text-black"]
+  },
   mode: 'jit',
   darkMode: 'media',
   theme: {
