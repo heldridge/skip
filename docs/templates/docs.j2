@@ -3,11 +3,25 @@
 {% block content %}
 
 <div class="w-full justify-center flex mt-4 md:mt-20 mb-10">
-    <nav>
+    <nav class="mr-10">
+        <a href="/">
+            <h2 class="text-lg hover:underline font-semibold"> Home </h2>
+        </a>
+
+        <div class="w-full h-px bg-gray-300 mb-3"></div>
+
+        <a href="{{ collections.tutorial[0].get_permalink() }}">
+            <h2 class="text-lg font-semibold hover:underline">Tutorial</h2>
+        </a>
         <ul>
             {% for page in collections.tutorial %}
             <li>
-                <a href="{{ page.get_permalink() }}"> {{ page.data.title }} </a>
+                <a 
+                    href="{{ page.get_permalink() }}"
+                    class="hover:underline"    
+                >
+                    {{ page.data.title }}
+                </a>
             </li>
             {% endfor %}
         </ul>
