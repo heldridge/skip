@@ -4,23 +4,38 @@
 
 <div class="w-full justify-center flex mt-4 md:mt-20 mb-10">
     <nav class="mr-10">
-        <a href="/">
-            <h2 class="text-lg hover:underline font-semibold"> Home </h2>
-        </a>
 
-        <div class="w-full h-px bg-gray-300 mb-3"></div>
-
-        <a href="{{ collections.tutorial[0].get_permalink() }}">
-            <h2 class="text-lg font-semibold hover:underline">Tutorial</h2>
-        </a>
         <ul>
-            {% for page in collections.tutorial %}
-            <li>
+            <li class="px-1">
+                <a href="/">
+                    <h2 class="text-lg hover:underline font-semibold"> Home </h2>
+                </a>
+            </li>
+        </ul>
+
+        <div class="w-full h-px bg-gray-300 mb-3 mx-1"></div>
+
+        
+        <ul>
+            <li class="px-1">
+                <a href="{{ collections.tutorial[0].get_permalink() }}">
+                    <h2 class="text-lg font-semibold hover:underline">Tutorial</h2>
+                </a>
+            </li>
+            {% for tutorial in collections.tutorial %}
+            <li
+                {% if page.get_permalink() == tutorial.get_permalink() %}
+                aria-current="page"
+                class="bg-indigo-50 dark:bg-indigo-900 px-1 rounded"
+                {% else %}
+                class="px-1"
+                {% endif %}
+            >
                 <a 
-                    href="{{ page.get_permalink() }}"
+                    href="{{ tutorial.get_permalink() }}"
                     class="hover:underline"    
                 >
-                    {{ page.data.title }}
+                    {{ tutorial.data.title }}
                 </a>
             </li>
             {% endfor %}
