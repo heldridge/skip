@@ -31,11 +31,12 @@ class SitePage:
         self.template_data = {"data": self.data, "collections": self.collections}
 
     def render(self, jinja2_env: jinja2.Environment) -> str:
-        html = self.source.get_html(jinja2_env, **self.template_data)
+        html = self.source.get_html(jinja2_env, page=self, **self.template_data)
         if "layout" in self.data:
             template = jinja2_env.get_template(self.data["layout"])
             return template.render(
                 content=html,
+                page=self,
                 data=self.data,
                 collections=self.collections,
             )
