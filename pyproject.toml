@@ -1,12 +1,15 @@
 [tool.poetry]
-name = "skip"
-version = "0.1.0"
+name = "skip_ssg"
+version = "0.1.1"
 description = "A simple python-based static site generator"
-authors = ["Harry"]
+authors = ["Harry Eldridge <heldridge@protonmail.com>"]
+readme = "README.md"
+repository = "https://github.com/heldridge/skip"
+keywords = ["ssg", "static-site-generator", "markdown"]
 license = "MIT"
 
 [tool.poetry.scripts]
-skip = 'skip:main'
+skip = 'skip_ssg:main'
 
 [tool.poetry.dependencies]
 python = "^3.9"
