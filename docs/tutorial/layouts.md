@@ -5,7 +5,7 @@ date: "2021-01-04"
 
 # Layouts
 
-Any source file can be rendered as content inside of another template.
+Any source file can be rendered as content inside of a template.
 
 Make a new subfolder in the `skip-example` directory called `templates`:
 
