@@ -30,7 +30,9 @@ Now, change `index.md` from the Getting Started tutorial to the following:
 
 ``` markdown
 ---
+
 layout: my-template
+
 ---
 
 # Hello World!
