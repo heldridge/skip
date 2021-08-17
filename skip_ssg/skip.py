@@ -11,9 +11,15 @@ from gitignore_parser import parse_gitignore
 import jinja2
 import watchgod
 
-import server
-from sources import DataFile, DataFileFactory, PageFile, PageFileFactory, SitePage
-import watchers
+import skip_ssg.server as server
+from skip_ssg.sources import (
+    DataFile,
+    DataFileFactory,
+    PageFile,
+    PageFileFactory,
+    SitePage,
+)
+import skip_ssg.watchers as watchers
 
 
 USE_DATA_DIR = True

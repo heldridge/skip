@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skip_ssg"
-version = "0.1.1"
+version = "0.1.2"
 description = "A simple python-based static site generator"
 authors = ["Harry Eldridge <heldridge@protonmail.com>"]
 readme = "README.md"
@@ -9,7 +9,7 @@ keywords = ["ssg", "static-site-generator", "markdown"]
 license = "MIT"
 
 [tool.poetry.scripts]
-skip = 'skip_ssg:main'
+skip = 'skip_ssg.skip:main'
 
 [tool.poetry.dependencies]
 python = "^3.9"
