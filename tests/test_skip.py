@@ -48,16 +48,6 @@ class TestGetPageFiles(unittest.TestCase):
                 self.assertTrue("b_json" in pf.data)
                 self.assertTrue("b_py" in pf.data)
 
-    def test_errors_on_non_dict_json_data(self):
-        with tempfile.TemporaryDirectory() as td:
-            td = Path(td)
-
-            with open(td / "bad.json", "w+") as outfile:
-                json.dump(["list"], outfile)
-
-            with self.assertRaises(skip.NonDictDataFileException):
-                skip.get_page_files({}, lambda _: False, Path(td), {}, True)
-
 
 class TestGetCollections(unittest.TestCase):
     def test_creates_all_collection(self):
