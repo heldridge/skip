@@ -37,3 +37,5 @@ layout: my-template
 ```
 
 Your `index.html` in the site folder will now be rendered with the header and footer from the layout.
+
+Next up, learn about looping over your site pages with [collections](/tutorial/collections)
