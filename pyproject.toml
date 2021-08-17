@@ -5,6 +5,9 @@ description = "A simple python-based static site generator"
 authors = ["Harry"]
 license = "MIT"
 
+[tool.poetry.scripts]
+skip = 'skip:main'
+
 [tool.poetry.dependencies]
 python = "^3.9"
 watchgod = "^0.7"
