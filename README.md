@@ -11,7 +11,7 @@ Skip is a Python-based data-forward static site generator inspired by [Eleventy]
 ## Quickstart
 
 ``` bash
-pip install skip_ssg
+pip install skip-ssg
 echo '# Hello World' > index.md
 skip
 ```

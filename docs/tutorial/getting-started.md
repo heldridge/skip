@@ -15,7 +15,7 @@ All lines in code blocks that start with `>>>` are meant to be run as-is in the 
 Next, you can install Skip from [PyPI](https://pypi.org/).
 
 ``` bash
->>> pip install skip_ssg
+>>> pip install skip-ssg
 ```
 
 Add some content...
