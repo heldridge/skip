@@ -17,3 +17,5 @@ settings.py
 htmlcov/
 node_modules/
 docs/css/tailwind.css
+*.whl
+*.tar.gz
