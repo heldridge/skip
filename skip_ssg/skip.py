@@ -136,7 +136,15 @@ def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
 
     site_dir = Path(config["output"])
 
-    ignore_dirs = {".git", "data", config["output"], "templates", "__pycache__", "venv"}
+    ignore_dirs = {
+        ".git",
+        "data",
+        config["output"],
+        "templates",
+        "__pycache__",
+        "venv",
+        "node_modules",
+    }
     page_files = get_page_files(
         ignore_dirs, should_ignore, Path("."), data, config["fail_on_error"]
     )
