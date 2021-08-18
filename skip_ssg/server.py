@@ -3,7 +3,7 @@ import http.server
 import functools
 import socketserver
 import threading
-from typing import Callable
+from typing import Callable, Dict
 
 
 class QuietHander(http.server.SimpleHTTPRequestHandler):
@@ -20,7 +20,7 @@ def _start_server_on_port(
         httpd.serve_forever()
 
 
-def run_server(config: dict):
+def run_server(config: Dict):
     Handler = functools.partial(QuietHander, directory=config["output"])
 
     if config.get("port") is None:
@@ -40,6 +40,6 @@ def run_server(config: dict):
         _start_server_on_port(Handler, config["port"])
 
 
-def run(config: dict):
+def run(config: Dict):
     server_thread = threading.Thread(target=run_server, args=(config,), daemon=True)
     server_thread.start()

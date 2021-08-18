@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 import sys
-from typing import Any, Generator, Union
+from typing import Any, Dict, Generator, List, Union
 
 import arrow
 import frontmatter
@@ -11,7 +11,7 @@ import jinja2
 import markdown
 
 
-def chunks(lst: list, n: int) -> Generator[list, None, None]:
+def chunks(lst: List, n: int) -> Generator[List, None, None]:
     """Yield successive n-sized chunks from lst
 
     Thank you SO: https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
@@ -23,7 +23,7 @@ def chunks(lst: list, n: int) -> Generator[list, None, None]:
 
 class SitePage:
     def __init__(
-        self, source: "PageFile", data: dict, collections: dict[str, list["PageFile"]]
+        self, source: "PageFile", data: Dict, collections: Dict[str, List["PageFile"]]
     ) -> None:
         self.source = source
         self.data = data
@@ -80,10 +80,10 @@ class PaginationSitePage(SitePage):
     def __init__(
         self,
         source: "PageFile",
-        data: dict,
-        collections: dict[str, list["PageFile"]],
+        data: Dict,
+        collections: Dict[str, List["PageFile"]],
         index: int,
-        items: list,
+        items: List,
     ) -> None:
         super().__init__(source, data, collections)
         self.index = index
@@ -141,7 +141,7 @@ class NoPermalinkException(Exception):
 
 
 class PageFile(SourceFile):
-    def __init__(self, path: Path, data: dict) -> None:
+    def __init__(self, path: Path, data: Dict) -> None:
         super().__init__(path)
 
         with open(self.path) as infile:
@@ -153,7 +153,7 @@ class PageFile(SourceFile):
             if isinstance(self.data["tags"], str):
                 self.tags = set()
                 self.tags.add(self.data["tags"])
-            elif isinstance(self.data["tags"], list):
+            elif isinstance(self.data["tags"], List):
                 self.tags = set(self.data["tags"])
             else:
                 raise InvalidTagsException(
@@ -166,7 +166,7 @@ class PageFile(SourceFile):
         if "date" in self.data:
             self.date = arrow.get(self.data["date"])
 
-    def get_pages(self, collections: dict[str, list["PageFile"]]) -> list[SitePage]:
+    def get_pages(self, collections: Dict[str, List["PageFile"]]) -> List[SitePage]:
         if "pagination" in self.data:
 
             pagination_source = self.data["pagination"]["data"]
@@ -178,7 +178,7 @@ class PageFile(SourceFile):
             else:
                 raise MissingPaginationSourceException(pagination_source)
 
-            pages: list[SitePage] = []
+            pages: List[SitePage] = []
             for index, items in enumerate(
                 chunks(pagination_data, self.data["pagination"]["size"])
             ):
@@ -225,7 +225,7 @@ class DataFile(SourceFile, ABC):
 class JSONFile(DataFile):
     suffixes = {".json"}
 
-    def get_data(self) -> Union[list, dict]:
+    def get_data(self) -> Union[List, Dict]:
         with open(self.path) as infile:
             return json.load(infile)
 
@@ -267,7 +267,7 @@ class PageFileFactory:
     def is_valid_file(self, path: Path) -> bool:
         return path.suffix in self.suffix_to_class_map
 
-    def load_source_file(self, path: Path, data: dict) -> PageFile:
+    def load_source_file(self, path: Path, data: Dict) -> PageFile:
         suffix = path.suffix
         if not self.is_valid_file(path):
             raise InvalidFileExtensionException(

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import pkgutil
 import shutil
-from typing import Any, Callable, List, Mapping
+from typing import Any, Callable, Dict, List, Mapping
 
 from gitignore_parser import parse_gitignore
 import jinja2
@@ -35,7 +35,7 @@ except ImportError:
     USE_SETTINGS = False
 
 
-def process_datafiles() -> dict:
+def process_datafiles() -> Dict:
     data_map = {}
     for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
         module = loader.find_module(module_name).load_module(module_name)
@@ -59,7 +59,7 @@ def get_page_files(
     ignores: set[str],
     should_ignore: Callable[[str], bool],
     path: Path,
-    data: dict,
+    data: Dict,
     fail_on_error: bool,
 ) -> List[PageFile]:
     page_paths = []
@@ -93,7 +93,7 @@ def get_page_files(
             else:
                 raise e
 
-        if not isinstance(file_data, dict):
+        if not isinstance(file_data, Dict):
             file_data = {data_file.path.stem: file_data}
         data = {**data, **file_data}
 
@@ -126,7 +126,7 @@ def false(_: Any) -> bool:
     return False
 
 
-def build_site(config: dict, should_ignore: Callable[[str], bool]) -> None:
+def build_site(config: Dict, should_ignore: Callable[[str], bool]) -> None:
     print("Building Site")
 
     if USE_DATA_DIR:
