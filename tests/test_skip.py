@@ -5,8 +5,8 @@ import unittest
 
 import arrow
 
-import skip
-from sources import MarkdownFile
+from skip_ssg import skip
+from skip_ssg.sources import MarkdownFile
 
 
 class TestWritePage(unittest.TestCase):

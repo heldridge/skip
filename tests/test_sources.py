@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import arrow
 import jinja2
 
-from sources import (
+from skip_ssg.sources import (
     DataFileFactory,
     InvalidFileExtensionException,
     InvalidTagsException,
