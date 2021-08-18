@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import pkgutil
 import shutil
-from typing import Any, Callable, Dict, List, Mapping
+from typing import Any, Callable, Dict, List, Mapping, Set
 
 from gitignore_parser import parse_gitignore
 import jinja2
@@ -56,7 +56,7 @@ def write_page(
 
 
 def get_page_files(
-    ignores: set[str],
+    ignores: Set[str],
     should_ignore: Callable[[str], bool],
     path: Path,
     data: Dict,
