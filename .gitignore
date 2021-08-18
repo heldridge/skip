@@ -2,13 +2,10 @@
 data/
 *.md
 !README.md
-!docs/**/*.md
 _site/
 sandbox/
 templates/
-!docs/templates/
 css/
-!docs/css/
 testo/
 .skipignore
 settings.py
@@ -16,6 +13,5 @@ settings.py
 .coverage
 htmlcov/
 node_modules/
-docs/css/tailwind.css
 *.whl
 *.tar.gz
