@@ -143,6 +143,7 @@ def build_site(config: Dict, should_ignore: Callable[[str], bool]) -> None:
         "templates",
         "__pycache__",
         "venv",
+        ".venv",
         "node_modules",
     }
     page_files = get_page_files(
