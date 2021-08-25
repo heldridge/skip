@@ -21,27 +21,11 @@ from skip_ssg.sources import (
 )
 import skip_ssg.watchers as watchers
 
-
-USE_DATA_DIR = True
-try:
-    import data
-except ImportError:
-    USE_DATA_DIR = False
-
 try:
     import settings
 except ImportError:
     print("No settings file found, using defaults")
     USE_SETTINGS = False
-
-
-def process_datafiles() -> Dict:
-    data_map = {}
-    for loader, module_name, is_pkg in pkgutil.iter_modules(data.__path__):
-        module = loader.find_module(module_name).load_module(module_name)
-        data_map[module_name] = module.get_data()
-
-    return data_map
 
 
 def write_page(
@@ -53,6 +37,25 @@ def write_page(
     os.makedirs(full_path.parent, exist_ok=True)
     with open(full_path, "w+") as outfile:
         outfile.write(html)
+
+
+def get_data_from_datafiles(data_files: List[DataFile], fail_on_error) -> Dict:
+    data = {}
+    for data_file in data_files:
+        try:
+            file_data = data_file.get_data()
+        except Exception as e:
+            if not fail_on_error:
+                print(f'Failed to load data from {data_file.path}: "{e}", skipping...')
+                continue
+            else:
+                raise e
+
+        if not isinstance(file_data, Dict):
+            file_data = {data_file.path.stem: file_data}
+
+        data = {**data, **file_data}
+    return data
 
 
 def get_page_files(
@@ -83,19 +86,7 @@ def get_page_files(
             elif dff.is_valid_file(path):
                 data_files.append(dff.load_source_file(path))
 
-    for data_file in data_files:
-        try:
-            file_data = data_file.get_data()
-        except Exception as e:
-            if not fail_on_error:
-                print(f'Failed to load data from {data_file.path}: "{e}", skipping...')
-                continue
-            else:
-                raise e
-
-        if not isinstance(file_data, Dict):
-            file_data = {data_file.path.stem: file_data}
-        data = {**data, **file_data}
+        data = {**data, **get_data_from_datafiles(data_files, fail_on_error)}
 
     for page_path in page_paths:
         page_files.append(pff.load_source_file(page_path, data))
@@ -129,10 +120,7 @@ def false(_: Any) -> bool:
 def build_site(config: Dict, should_ignore: Callable[[str], bool]) -> None:
     print("Building Site")
 
-    if USE_DATA_DIR:
-        data = process_datafiles()
-    else:
-        data = {}
+    data = {}
 
     site_dir = Path(config["output"])
 
@@ -146,6 +134,20 @@ def build_site(config: Dict, should_ignore: Callable[[str], bool]) -> None:
         ".venv",
         "node_modules",
     }
+
+    dff = DataFileFactory()
+    data_files = []
+    for root, dirs, files in os.walk("data"):
+        if "__pycache__" in dirs:
+            del dirs[dirs.index("__pycache__")]
+
+        for file in files:
+            path = Path(root, file)
+            if dff.is_valid_file(path):
+                data_files.append(dff.load_source_file(path))
+
+    data = get_data_from_datafiles(data_files, config["fail_on_error"])
+
     page_files = get_page_files(
         ignore_dirs, should_ignore, Path("."), data, config["fail_on_error"]
     )
