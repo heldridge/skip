@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skip_ssg"
-version = "0.1.11"
+version = "0.2.0"
 description = "A simple python-based static site generator"
 authors = ["Harry Eldridge <heldridge@protonmail.com>"]
 readme = "README.md"
