@@ -15,3 +15,5 @@ pip install skip-ssg
 echo '# Hello World' > index.md
 skip
 ```
+
+To see more, check out the [documentation](skip.harryeldridge.com)
