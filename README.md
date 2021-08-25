@@ -16,4 +16,4 @@ echo '# Hello World' > index.md
 skip
 ```
 
-To see more, check out the [documentation](skip.harryeldridge.com)
+To see more, check out the [documentation](http://skip.harryeldridge.com)
