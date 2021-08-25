@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import importlib
 import json
 import os
 from pathlib import Path
@@ -88,7 +89,11 @@ class PaginationSitePage(SitePage):
         super().__init__(source, data, collections)
         self.index = index
         self.items = items
-        self.template_data = {**self.template_data, "items": self.items}
+        self.template_data = {
+            **self.template_data,
+            "items": self.items,
+            "index": self.index,
+        }
 
     def get_path(self) -> Path:
         if self.index == 0:
@@ -238,6 +243,7 @@ class PythonFile(DataFile):
         if self.path.parent.name != "":
             sys.path.append(parent_path)
             module = __import__(self.path.stem)
+            importlib.reload(module)
             data = module.get_data()
             sys.path.remove(parent_path)
 
