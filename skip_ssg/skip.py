@@ -3,7 +3,6 @@ from collections import defaultdict
 import errno
 import os
 from pathlib import Path
-import pkgutil
 import shutil
 from typing import Any, Callable, Dict, List, Mapping, Set
 
@@ -17,7 +16,6 @@ from skip_ssg.sources import (
     DataFileFactory,
     PageFile,
     PageFileFactory,
-    SitePage,
 )
 import skip_ssg.watchers as watchers
 
